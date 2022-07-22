@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>io.github.vancer0.guu</id>
+	<metadata_license>CC-BY-SA-3.0</metadata_license>
+	<project_license>GPL-3.0</project_license>
+	<name>Gaytor.rent Upload Utility</name>
+	<summary>A helper utility to upload torrents to Gaytor.rent</summary>
+	<description>
+		<p>
+			Gaytor.rent Upload Utility is a fanmade open source program for uploading and automatically seeding torrents for gaytor.rent.
+		</p>
+	</description>
+	<launchable type="desktop-id">io.github.vancer0.guu.desktop</launchable>
+</component>

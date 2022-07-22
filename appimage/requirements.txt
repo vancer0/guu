@@ -1,0 +1,5 @@
+PyQt6==6.2.3
+requests
+bs4
+libtorrent
+qbittorrent-api
