@@ -12,7 +12,7 @@ import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
 
-GUUVERSION = '1'
+GUUVERSION = '0'
 
 session = requests.Session() # Main web session
 
@@ -181,6 +181,15 @@ class Misc:
         else:
             print("Created torrent OK.")
 
+    # Check for updates
+    def update_check():
+        try:
+            remote = requests.get("https://vancer0.github.io/guu/version.json", stream=True)
+            data = json.loads(remote.text)
+            ver = int(data["version"])
+            return ver
+        except:
+            return 0
 
 class Main(QMainWindow):
     def __init__(self):
@@ -220,6 +229,22 @@ class Main(QMainWindow):
         self.loginBtn.clicked.connect(self.login)
 
         self.checks()
+
+        ver = Misc.update_check()
+        if ver == 0:
+            QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
+            print("Cannot reach GitHub. Update check failed.")
+        elif ver > int(GUUVERSION):
+            choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if choice == QMessageBox.StandardButton.Yes:
+                Misc.openlink("https://github.com/vancer0/guu/releases/download/{}/GUU-{}-x86_64.AppImage".format(str(ver), str(ver)))
+            else:
+                pass
+            print("New version available: {}".format(str(ver)))
+        elif ver == int(GUUVERSION):
+            print("No updates found.")
+        else:
+            print("Unknown error while checking updates.")
     
     #################
     # GUI FUNCTIONS #
@@ -731,6 +756,7 @@ class Main(QMainWindow):
             data = json.load(f)
         except:
             print("Failed while loading project.")
+            QMessageBox.warning(self, 'GUU', "An error occured while opening the project.")
             return
 
         self.category.setCurrentIndex(data["Categories"]["Main"])

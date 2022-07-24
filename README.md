@@ -1,10 +1,10 @@
 # Gaytor.rent Upload Utility
 
-<img title="GUU" alt="GUU" height=400 src="https://github.com/vancer0/guu/raw/main/media/screenshot.png">
+<img title="GUU" alt="GUU" height=400 src="https://github.com/vancer0/guu/raw/master/media/screenshot.png">
 
 ## About
 
-Gaytor.rent Upload Utility is a cross-platform open source program that can automatically create, upload and seed torrents for gaytor.rent (former gaytorrent.ru).
+Gaytor.rent Upload Utility is an open source program for Linux that can automatically create, upload and seed torrents for gaytor.rent (former gaytorrent.ru).
 
 ## Features
 
@@ -17,20 +17,19 @@ Gaytor.rent Upload Utility is a cross-platform open source program that can auto
 ## Installation
 
 There are two ways to run this program:
-1. **Get the executable** for your OS from the [Releases](https://github.com/vancer0/guu/releases) page.
+1. **Get the executable** (AppImage) from the [Releases](https://github.com/vancer0/guu/releases) page.
 
 2. **Run the program directly** from the source (make sure both Python 3.10 and Qt are installed on your computer):
     1. Clone the repository `git clone https://github.com/vancer0/guu.git`
     2. Change to the program source directory `cd guu/src`
     3. Install the dependencies `pip install -r requirements.txt`
-    4. Run GUU `python3 guu.py` or `python guu.py`
+    4. Run GUU `python guu.py`
 
 ## To-Do
 
 - Drag and Drop functionality for the picture list
 - Support more torrent clients
 - Pull the categories from the website (instead of storing them as a list in the code)
-- Update checker
 
 ## License
 
