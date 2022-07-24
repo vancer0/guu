@@ -12,7 +12,7 @@ import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
 
-GUUVERSION = '0'
+GUUVERSION = '1'
 
 session = requests.Session() # Main web session
 
@@ -29,7 +29,7 @@ GT_STATUS = 0
 
 class Settings:
     global GUUPATH
-    config_path = os.path.join(os.path.expanduser("~"), ".guu-config")
+    config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
 
     try:
         config = RawConfigParser() 
@@ -81,7 +81,7 @@ class Settings:
     savepath = config['UPLOADING']['Save_Path']
 
     def save(language, savelgn, gtusr, gtpwd, autodl, client, webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath):
-        config_path = os.path.join(os.path.expanduser("~"), ".guu-config")
+        config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
         if not Settings.config.has_section('GENERAL'):
             Settings.config.add_section("GENERAL")
         Settings.config.set("GENERAL", "Language", language)
@@ -115,7 +115,7 @@ class Settings:
             print("Config saved.")
 
     def login_save(savelgn, usr, pwd):
-        config_path = os.path.join(os.path.expanduser("~"), ".guu-config")
+        config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
         if not Settings.config.has_section('GAYTORRENT'):
             Settings.config.add_section("GAYTORRENT")
         Settings.config.set("GAYTORRENT", "SaveLogin", savelgn)
