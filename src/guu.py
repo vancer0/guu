@@ -551,6 +551,7 @@ class Main(QMainWindow):
         if Settings.autodl == True:
             if Settings.webuihost == "localhost" or Settings.webuihost == "127.0.0.1":
                 self.dlpath = self.dirpath
+                self.download()
                 self.seed()
                 shutil.rmtree(GUUPATH + '/.guucache')
                 self.uploadStatus.setFormat('Done! (%p%)')
@@ -563,6 +564,7 @@ class Main(QMainWindow):
                 def get():
                     self.dlpath = self.dlwin.remotePath.text()
                     self.dlwin.close()
+                    self.download()
                     self.seed()
                     shutil.rmtree(GUUPATH + '/.guucache')
                     self.uploadStatus.setFormat('Done! (%p%)')
