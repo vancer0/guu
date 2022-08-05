@@ -4,7 +4,7 @@
 
 ## About
 
-Gaytor.rent Upload Utility is an open source program for Linux that can automatically create, upload and seed torrents for gaytor.rent (former gaytorrent.ru).
+Gaytor.rent Upload Utility is an open source program for Linux, Windows and macOS that can automatically create, upload and seed torrents for gaytor.rent (former gaytorrent.ru).
 
 ## Features
 
@@ -17,7 +17,7 @@ Gaytor.rent Upload Utility is an open source program for Linux that can automati
 ## Installation
 
 There are two ways to run this program:
-1. **Get the executable** (AppImage) from the [Releases](https://github.com/vancer0/guu/releases) page.
+1. **Get the build** from the [Releases](https://github.com/vancer0/guu/releases) page.
 
 2. **Run the program directly** from the source (make sure both Python 3.10 and Qt are installed on your computer):
     1. Clone the repository `git clone https://github.com/vancer0/guu.git`
