@@ -31,4 +31,4 @@ rm -r squashfs-root
 
 # Copy executable
 mkdir bin
-mv GUU-$VERSION-$ARCH.AppImage bin/GUU-$VERSION-$ARCH.AppImage
+mv GUU-$VERSION-$ARCH.AppImage bin/GUU-Linux-$ARCH.AppImage
