@@ -11,7 +11,6 @@ from configparser import RawConfigParser
 import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
-import platform
 
 GUUVERSION = '1'
 
@@ -31,13 +30,18 @@ GT_STATUS = 0
 class Settings:
     global GUUPATH
 
-    # Prepare config directory
-    try:
-        os.mkdir(os.path.join(os.path.expanduser("~"),".config"))
-    except:
-        pass
+    if sys.platform.startswith('linux'):
+        data_path = os.path.join(os.path.expanduser("~"),".config" ,"guu")
+    elif sys.platform.startswith('win'):
+        data_path = os.path.join(os.path.expanduser("~"),"AppData", "Roaming" ,"guu")
+    elif sys.platform.startswith('darwin'):
+        data_path = os.path.join(os.path.expanduser("~"),"Library", "Preferences" ,"guu")
+    else:
+        data_path = os.path.join(os.path.expanduser("~"),".config" ,"guu")
 
-    config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
+    os.makedirs(data_path, exist_ok=True)
+
+    config_path = os.path.join(data_path, "config")
 
     try:
         config = RawConfigParser() 
@@ -89,7 +93,6 @@ class Settings:
     savepath = config['UPLOADING']['Save_Path']
 
     def save(language, savelgn, gtusr, gtpwd, autodl, client, webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath):
-        config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
         if not Settings.config.has_section('GENERAL'):
             Settings.config.add_section("GENERAL")
         Settings.config.set("GENERAL", "Language", language)
@@ -115,7 +118,7 @@ class Settings:
         Settings.config.set("UPLOADING", "Save_Path", savepath)
 
         try:
-            with open(config_path, 'w') as config_file:
+            with open(Settings.config_path, 'w') as config_file:
                 Settings.config.write(config_file)
         except:
             print("Unable to save config.")
@@ -123,7 +126,6 @@ class Settings:
             print("Config saved.")
 
     def login_save(savelgn, usr, pwd):
-        config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
         if not Settings.config.has_section('GAYTORRENT'):
             Settings.config.add_section("GAYTORRENT")
         Settings.config.set("GAYTORRENT", "SaveLogin", savelgn)
@@ -131,7 +133,7 @@ class Settings:
         Settings.config.set("GAYTORRENT", "GT_Password", pwd)
 
         try:
-            with open(config_path, 'w') as config_file:
+            with open(Settings.config_path, 'w') as config_file:
                 Settings.config.write(config_file)
         except:
             print("Unable to save config.")
@@ -217,9 +219,11 @@ class Main(QMainWindow):
         self.fldrSelBtn.clicked.connect(self.select_folder)
         self.fileSelBtn.clicked.connect(self.select_file)
 
-        self.categories = ['Select Category', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
-        self.subcategories = ['(Optional)', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
-        self.categories_num = [0, 62, 29, 46, 30, 43, 19, 17, 44, 50, 9, 7, 48, 5, 67, 66, 34, 68, 27, 32, 63, 12, 33, 53, 57, 35, 36, 58, 37, 54, 38, 39, 56, 40, 45, 47, 1, 41, 42, 51, 65, 28]
+        #self.categories = ['Select Category', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
+        #self.subcategories = ['(Optional)', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
+        #self.categories_num = [0, 62, 29, 46, 30, 43, 19, 17, 44, 50, 9, 7, 48, 5, 67, 66, 34, 68, 27, 32, 63, 12, 33, 53, 57, 35, 36, 58, 37, 54, 38, 39, 56, 40, 45, 47, 1, 41, 42, 51, 65, 28]
+
+        self.load_categs()
 
         self.category.addItems(self.categories)
         self.category.activated.connect(self.enableitems)
@@ -243,20 +247,19 @@ class Main(QMainWindow):
             QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
             print("Cannot reach GitHub. Update check failed.")
         elif ver > int(GUUVERSION):
-            sys = str(platform.system())
-            if sys == "Linux":
+            if sys.platform.startswith('linux'):
                 choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
                     Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
                 else:
                     pass
-            elif sys == "Windows":
+            elif sys.platform.startswith('win'):
                 choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
                     Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
                 else:
                     pass
-            elif sys == "Darwin":
+            elif sys.platform.startswith('darwin'):
                 choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
                     Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
@@ -288,6 +291,7 @@ class Main(QMainWindow):
             if r.status_code == 200:
                 LOGIN_STATUS = 1
                 self.checklogin(Settings.gtusr)
+                self.categ_reload()
             else:
                 LOGIN_STATUS = 0
                 self.checklogin('')
@@ -400,11 +404,65 @@ class Main(QMainWindow):
             self.uploadBtn.setEnabled(True)
             self.picTable.setEnabled(True)
             self.uploadStatus.setEnabled(True)
+
+    # Loads categories from file
+    def load_categs(self):
+        categ_path = os.path.join(Settings.data_path, "categories.cache")
+
+        if os.path.exists(categ_path):
+            self.categories = ["Select Category"]
+            self.subcategories = ["(Optional)"]
+            self.categories_num = [0]
+            with open(categ_path, 'r') as f:
+                lines = f.readlines()
+                for c in lines:
+                    b = c.strip().split(";")
+                    if b != ['']:
+                        self.categories.append(b[1])
+                        self.subcategories.append(b[1])
+                        self.categories_num.append(b[0])
+        else:
+            self.categories = ["Log in to load categories"]
+            self.subcategories = ["Log in to load categories"]
+            self.categories_num = [0]
     
     # Pulls the category list from the website
     def categ_reload(self):
-        # To Do
-        QMessageBox.information(self, 'GUU', "Action not yet supported.")
+        global LOGIN_STATUS
+        if LOGIN_STATUS == 1:
+            r = session.get("https://www.gaytor.rent/genrelist.php")
+            raw = str(r.text)[46:].split('\n')
+
+            self.categories = ["Select Category"]
+            self.subcategories = ["(Optional)"]
+            self.categories_num = [0]
+
+            for c in raw:
+                if c != '':
+                    b = c.split(";")
+                    self.categories.append(b[1])
+                    self.subcategories.append(b[1])
+                    self.categories_num.append(b[0])
+
+            self.category.clear()
+            self.subcategory1.clear()
+            self.subcategory2.clear()
+            self.subcategory3.clear()
+            self.subcategory4.clear()
+
+            self.category.addItems(self.categories)
+            self.subcategory1.addItems(self.subcategories)
+            self.subcategory2.addItems(self.subcategories)
+            self.subcategory3.addItems(self.subcategories)
+            self.subcategory4.addItems(self.subcategories)
+
+            categ_path = os.path.join(Settings.data_path, "categories.cache")
+            with open(categ_path, 'w') as f:
+                for c in raw:
+                    f.writelines(c + '\n')
+                f.close()
+        else:
+            QMessageBox.warning(self, 'GUU', "You must be logged in to download the category list.")
 
     # Opens the torrent client's web UI
     def openwebui(self):
@@ -765,6 +823,7 @@ class Main(QMainWindow):
             if self.logwin.credSave.isChecked() == True:
                 savelgn = int(self.logwin.credSave.isChecked())
                 Settings.login_save(savelgn, usr, pwd)
+            self.categ_reload()
             self.logwin.close()
             self.checklogin(usr)
         else:
