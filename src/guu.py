@@ -29,6 +29,13 @@ GT_STATUS = 0
 
 class Settings:
     global GUUPATH
+
+    # Prepare config directory
+    try:
+        os.mkdir(os.path.join(os.path.expanduser("~"),".config"))
+    except:
+        pass
+
     config_path = os.path.join(os.path.expanduser("~"),".config" ,"guu-config")
 
     try:
