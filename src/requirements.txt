@@ -1,4 +1,4 @@
-PyQt6==6.2.3
+PyQt6
 requests
 bs4
 libtorrent
