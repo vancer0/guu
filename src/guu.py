@@ -11,6 +11,7 @@ from configparser import RawConfigParser
 import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
+import platform
 
 GUUVERSION = '1'
 
@@ -242,11 +243,31 @@ class Main(QMainWindow):
             QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
             print("Cannot reach GitHub. Update check failed.")
         elif ver > int(GUUVERSION):
-            choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-            if choice == QMessageBox.StandardButton.Yes:
-                Misc.openlink("https://github.com/vancer0/guu/releases/download/{}/GUU-{}-x86_64.AppImage".format(str(ver), str(ver)))
+            sys = str(platform.system())
+            if sys == "Linux":
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
+                else:
+                    pass
+            elif sys == "Windows":
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
+                else:
+                    pass
+            elif sys == "Darwin":
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
+                else:
+                    pass
             else:
-                pass
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/tag/{}".format(str(ver)))
+                else:
+                    pass
             print("New version available: {}".format(str(ver)))
         elif ver == int(GUUVERSION):
             print("No updates found.")
