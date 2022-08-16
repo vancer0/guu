@@ -11,6 +11,7 @@ from configparser import RawConfigParser
 import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
+from requests.exceptions import Timeout
 
 GUUVERSION = '1'
 
@@ -41,14 +42,10 @@ class Settings:
 
     config_path = os.path.join(data_path, "config")
 
-    try:
-        config = RawConfigParser() 
-        config.read(config_path)
-    except:
-        print("Unable to load config. Exiting.")
-        sys.exit()
-    else:
-        print("Loaded config.")
+    config = RawConfigParser()
+    config.read(config_path)
+
+    print("Loaded config.")
 
     if not config.has_section('GENERAL'):
         config.add_section("GENERAL")
@@ -115,13 +112,9 @@ class Settings:
         Settings.config.set("UPLOADING", "Save_Uploads", saveupld)
         Settings.config.set("UPLOADING", "Save_Path", savepath)
 
-        try:
-            with open(Settings.config_path, 'w') as config_file:
-                Settings.config.write(config_file)
-        except:
-            print("Unable to save config.")
-        else:
-            print("Config saved.")
+        with open(Settings.config_path, 'w') as config_file:
+            Settings.config.write(config_file)
+        rint("Config saved.")
 
     def login_save(savelgn, usr, pwd):
         if not Settings.config.has_section('GAYTORRENT'):
@@ -130,21 +123,17 @@ class Settings:
         Settings.config.set("GAYTORRENT", "GT_Username", usr)
         Settings.config.set("GAYTORRENT", "GT_Password", pwd)
 
-        try:
-            with open(Settings.config_path, 'w') as config_file:
-                Settings.config.write(config_file)
-        except:
-            print("Unable to save config.")
-        else:
-            print("Config saved.")
+        with open(Settings.config_path, 'w') as config_file:
+            Settings.config.write(config_file)
+        print("Config saved.")
 
 
 class qBitTorrent:
     global CLIENT_STATUS
     if Settings.autodl == True:
         try:
-            requests.get("http://" + Settings.webuihost + ":" + Settings.webuiport)
-        except Exception:
+            requests.head("http://" + Settings.webuihost + ":" + Settings.webuiport, timeout=3)
+        except Timeout:
             print("Client WebUI unreachable.")
             CLIENT_STATUS = 0
         else:
@@ -173,27 +162,24 @@ class Misc:
     # Create torrent
     def create_torrent(path, dirp):
         global GUUPATH
-        try:
-            fs = lt.file_storage()
-            lt.add_files(fs, path)
-            t = lt.create_torrent(fs)
-            t.add_tracker("http://tracker.gaytor.rent:2710/announce", 0)
-            t.set_creator('GayTor.rent Upload Utility v' + GUUVERSION)
-            lt.set_piece_hashes(t, dirp)
-            torrent = t.generate()    
-            f = open(GUUPATH + '/.guucache/upl.torrent', "wb")
-            f.write(lt.bencode(torrent))
-            f.close()
-        except:
-            print("Failed while making torrent file. Exiting.")
-            sys.exit()
-        else:
-            print("Created torrent OK.")
+
+        fs = lt.file_storage()
+        lt.add_files(fs, path)
+        t = lt.create_torrent(fs)
+        t.add_tracker("http://tracker.gaytor.rent:2710/announce", 0)
+        t.set_creator('GayTor.rent Upload Utility v' + GUUVERSION)
+        lt.set_piece_hashes(t, dirp)
+        torrent = t.generate()
+        f = open(GUUPATH + '/.guucache/upl.torrent', "wb")
+        f.write(lt.bencode(torrent))
+        f.close()
+
+        print("Created torrent OK.")
 
     # Check for updates
     def get_guu_version():
         try:
-            remote = requests.get("https://vancer0.github.io/guu/version.json", stream=True)
+            remote = requests.get("https://vancer0.github.io/guu/version.json", stream=True, timeout=3)
             data = json.loads(remote.text)
             ver = int(data["version"])
             return ver
@@ -205,6 +191,7 @@ class Main(QMainWindow):
         global GUUPATH
         super(Main, self).__init__()
         loadUi(GUUPATH + '/ui/gui.ui' ,self)
+        print("Drawing window")
 
         self.actionNew.triggered.connect(self.wipe)
         self.actionOpen.triggered.connect(self.openproj)
@@ -245,22 +232,41 @@ class Main(QMainWindow):
 
     # Executes several checks to update the Status section, auto logs in if it is selected in the settings
     def checks(self):
-        if Settings.savelgn == True:
-            login_data = {'username': Settings.gtusr, 'password': Settings.gtpwd}
-            r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data)
-            r = session.get("https://www.gaytor.rent/qtm.php")
-            global LOGIN_STATUS
-            if r.status_code == 200:
-                print("Auto login OK")
-                LOGIN_STATUS = 1
-                self.checklogin(Settings.gtusr)
-                self.categ_reload()
-            else:
-                print("Auto login failed")
-                LOGIN_STATUS = 0
-                self.checklogin('')
+        try:
+            r = session.head('https://www.gaytor.rent', timeout=3)
+        except Timeout:
+            print("Failed to connect to server")
+            self.statusLabel4.setText("Unreachable")
         else:
-            self.checklogin('')
+            if r.status_code == 200:
+                self.statusLabel4.setText("Online")
+            else:
+                self.statusLabel4.setText("Unreachable")
+            if Settings.savelgn == True:
+                login_data = {'username': Settings.gtusr, 'password': Settings.gtpwd}
+                try:
+                    r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
+                except Timeout:
+                    print("Failed to connect to server")
+
+                try:
+                    r = session.head("https://www.gaytor.rent/qtm.php", timeout=3)
+                except Timeout:
+                    print("Failed to connect to server")
+
+
+                global LOGIN_STATUS
+                if r.status_code == 200:
+                    print("Auto login OK")
+                    LOGIN_STATUS = 1
+                    self.checklogin(Settings.gtusr)
+                    self.categ_reload()
+                else:
+                    print("Auto login failed")
+                    LOGIN_STATUS = 0
+                    self.checklogin('')
+            else:
+                self.checklogin('')
 
         global CLIENT_STATUS
         if CLIENT_STATUS == 1:
@@ -269,15 +275,6 @@ class Main(QMainWindow):
             self.statusLabel2.setText("Invalid credentials")
         else:
             self.statusLabel2.setText("None")
-
-        try:
-            r = session.get('https://www.gaytor.rent')
-            if r.status_code == 200:
-                self.statusLabel4.setText("Online")
-            else:
-                self.statusLabel4.setText("Unreachable")
-        except Exception:
-            self.statusLabel4.setText("Unreachable")
     
     # Checks the login status for the Status section
     def checklogin(self, usr):
@@ -292,7 +289,7 @@ class Main(QMainWindow):
             self.loginBtn.clicked.connect(self.login)
 
     # Check for updates
-    def update_check(self)
+    def update_check(self):
         ver = Misc.get_guu_version()
         if ver == 0:
             QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
@@ -436,7 +433,11 @@ class Main(QMainWindow):
         global LOGIN_STATUS
         if LOGIN_STATUS == 1:
             print("Fetching category list")
-            r = session.get("https://www.gaytor.rent/genrelist.php")
+            try:
+                r = session.get("https://www.gaytor.rent/genrelist.php", timeout=3)
+            except Timeout:
+                print("Failed to connect to server")
+                return
             raw = str(r.text)[46:].split('\n')
 
             self.categories = ["Select Category"]
@@ -640,8 +641,6 @@ class Main(QMainWindow):
                 QMessageBox.warning(self, 'GUU', "Torrent already exists in the download folder.")
             except PermissionError:
                 QMessageBox.warning(self, 'GUU', "You do not have permission to save the torrent in the selected download folder.")
-            except:
-                QMessageBox.warning(self, 'GUU', "An error occured while saving the torrent.")
             else:
                 print("Torrent saved")
 
@@ -701,9 +700,9 @@ class Main(QMainWindow):
         try:
             for pic in self.piclist:
                 pics = {'ulpic[]': open(pic, 'rb')}
-                r = session.post(url, files=pics)
-        except:
-            print("Failed while uploading pictures. Aborting upload.")
+                r = session.post(url, files=pics, timeout=3)
+        except Timeout:
+            print("Failed to connect to server")
             return
         else:
             print("Uploaded pictures OK.")
@@ -714,7 +713,10 @@ class Main(QMainWindow):
         # Get picture IDs
         pidlist = []
         def getdata(url): 
-            r = session.get(url) 
+            try:
+                r = session.get(url, timeout=3)
+            except Timeout:
+                print("Failed to connect to server")
             return r.text
         htmldata = getdata(url) 
         soup = BeautifulSoup(htmldata, 'html.parser') 
@@ -739,9 +741,9 @@ class Main(QMainWindow):
         
         # Upload the data
         try:
-            r = session.post(url, data = upload_data, files = tor_file) # Post upload data
-        except:
-            print("Failed while uploading torrent. Aborting upload.")
+            r = session.post(url, data = upload_data, files = tor_file, timeout=3) # Post upload data
+        except Timeout:
+            print("Failed to connect to server")
             return
         else:
             print("Uploaded data OK.")
@@ -762,12 +764,12 @@ class Main(QMainWindow):
 
         # Download the torrent and save it as dl.torrent
         try:
-            with session.get(urle) as r:
+            with session.get(urle, timeout=3) as r:
                 with open(GUUPATH + '/.guucache/dl.torrent', 'wb') as f:
                     for chunk in r.iter_content(chunk_size = 16*1024):
                         f.write(chunk)
-        except:
-            print("Failed while downloading torrent. Aborting download.")
+        except Timeout:
+            print("Failed to connect to server")
             return
         else:
             print("Downloaded torrent OK.")
@@ -777,13 +779,8 @@ class Main(QMainWindow):
         global GUUPATH
         self.uploadStatus.setFormat('Adding torrent to the client... (%p%)')
         self.uploadStatus.setValue(7)
-        try:
-            qBitTorrent.qbt_client.torrents_add(torrent_files=GUUPATH + '/.guucache/dl.torrent', savepath=self.dlpath, is_paused=False)
-        except:
-            print("Failed while adding torrent to the client.")
-            return
-        else:
-            print("Added torrent to client OK.")
+        qBitTorrent.qbt_client.torrents_add(torrent_files=GUUPATH + '/.guucache/dl.torrent', savepath=self.dlpath, is_paused=False)
+        print("Added torrent to client OK.")
 
     ###################
     # LOGIN FUNCTIONS #
@@ -800,9 +797,9 @@ class Main(QMainWindow):
             self.logwin.logwinBtn.setShortcut("Return")
         else:
             try:
-                r = session.get("https://www.gaytor.rent/logout.php")
-            except:
-                LOGIN_STATUS = 0
+                r = session.get("https://www.gaytor.rent/logout.php", timeout=3)
+            except Timeout:
+                print("Failed to connect to server")
             else:
                 LOGIN_STATUS = 0
             self.checklogin('')
@@ -814,21 +811,20 @@ class Main(QMainWindow):
 
         login_data = {'username': usr, 'password': pwd} 
         try:
-            r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data) 
-        except:
-            print("Failed to login.")
-            QMessageBox.warning(self, 'GUU', "Login failed!")
-        else:
-            print("Logged in OK.")
+            r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
+        except Timeout:
+            print("Failed to connect to server")
 
         global LOGIN_STATUS
         try:
-            r = session.get("https://www.gaytor.rent/qtm.php")
+            r = session.head("https://www.gaytor.rent/qtm.php", timeout=3)
             if r.status_code == 200:
+                print("Logged in OK.")
                 LOGIN_STATUS = 1
             else:
                 LOGIN_STATUS = 0
-        except Exception:
+        except Timeout:
+            print("Failed to connect to server")
             LOGIN_STATUS = 0
 
         if LOGIN_STATUS == 1:
@@ -853,12 +849,7 @@ class Main(QMainWindow):
         else:
             f = open(str(filename[0]))
 
-        try:
-            data = json.load(f)
-        except:
-            print("Failed while loading project.")
-            QMessageBox.warning(self, 'GUU', "An error occured while opening the project.")
-            return
+        data = json.load(f)
 
         self.category.setCurrentIndex(data["Categories"]["Main"])
         self.enableitems()
@@ -918,13 +909,9 @@ class Main(QMainWindow):
             else:
                 filename = saveas[0] + ".guu"
 
-            try:
-                with open(filename, 'w') as f:
-                    json.dump(data, f)
-            except:
-                print("Failed while saving project.")
-            else:
-                print("Saved project OK.")
+            with open(filename, 'w') as f:
+                json.dump(data, f)
+            print("Saved project OK.")
 
 
 if __name__ == '__main__':
@@ -932,7 +919,4 @@ if __name__ == '__main__':
     win = Main()
     win.show()
 
-    try:
-        sys.exit(app.exec())
-    except:
-        pass
+    sys.exit(app.exec())
