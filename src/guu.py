@@ -13,7 +13,7 @@ import libtorrent
 from qbittorrentapi import Client as QBitClient
 from requests.exceptions import Timeout, ConnectionError
 
-GUUVERSION = '1'
+GUUVERSION = '2'
 
 session = requests.Session() # Main web session
 
