@@ -114,7 +114,7 @@ class Settings:
 
         with open(Settings.config_path, 'w') as config_file:
             Settings.config.write(config_file)
-        rint("Config saved.")
+        print("Config saved.")
 
     def login_save(savelgn, usr, pwd):
         if not Settings.config.has_section('GAYTORRENT'):
