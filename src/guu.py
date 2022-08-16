@@ -133,7 +133,7 @@ class qBitTorrent:
     if Settings.autodl == True:
         try:
             requests.head("http://" + Settings.webuihost + ":" + Settings.webuiport, timeout=3)
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Client WebUI unreachable.")
             CLIENT_STATUS = 0
         else:
@@ -247,13 +247,13 @@ class Main(QMainWindow):
                 login_data = {'username': Settings.gtusr, 'password': Settings.gtpwd}
                 try:
                     r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
-                except Timeout:
+                except(Timeout, ConnectionError):
                     print("Failed to connect to server")
                     self.checklogin('')
 
                 try:
                     r = session.head("https://www.gaytor.rent/qtm.php", timeout=3)
-                except Timeout:
+                except(Timeout, ConnectionError):
                     print("Failed to connect to server")
                     self.checklogin('')
 
@@ -437,7 +437,7 @@ class Main(QMainWindow):
             print("Fetching category list")
             try:
                 r = session.get("https://www.gaytor.rent/genrelist.php", timeout=3)
-            except Timeout:
+            except(Timeout, ConnectionError):
                 print("Failed to connect to server")
                 return
             raw = str(r.text)[46:].split('\n')
@@ -703,7 +703,7 @@ class Main(QMainWindow):
             for pic in self.piclist:
                 pics = {'ulpic[]': open(pic, 'rb')}
                 r = session.post(url, files=pics, timeout=3)
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
             return
         else:
@@ -717,7 +717,7 @@ class Main(QMainWindow):
         def getdata(url): 
             try:
                 r = session.get(url, timeout=3)
-            except Timeout:
+            except(Timeout, ConnectionError):
                 print("Failed to connect to server")
             return r.text
         htmldata = getdata(url) 
@@ -744,7 +744,7 @@ class Main(QMainWindow):
         # Upload the data
         try:
             r = session.post(url, data = upload_data, files = tor_file, timeout=3) # Post upload data
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
             return
         else:
@@ -770,7 +770,7 @@ class Main(QMainWindow):
                 with open(GUUPATH + '/.guucache/dl.torrent', 'wb') as f:
                     for chunk in r.iter_content(chunk_size = 16*1024):
                         f.write(chunk)
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
             return
         else:
@@ -800,7 +800,7 @@ class Main(QMainWindow):
         else:
             try:
                 r = session.get("https://www.gaytor.rent/logout.php", timeout=3)
-            except Timeout:
+            except(Timeout, ConnectionError):
                 print("Failed to connect to server")
             else:
                 LOGIN_STATUS = 0
@@ -814,7 +814,7 @@ class Main(QMainWindow):
         login_data = {'username': usr, 'password': pwd} 
         try:
             r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
 
         global LOGIN_STATUS
@@ -825,7 +825,7 @@ class Main(QMainWindow):
                 LOGIN_STATUS = 1
             else:
                 LOGIN_STATUS = 0
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
             LOGIN_STATUS = 0
 
