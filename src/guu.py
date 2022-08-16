@@ -28,8 +28,6 @@ GT_STATUS = 0
 
 
 class Settings:
-    global GUUPATH
-
     if sys.platform.startswith('linux'):
         data_path = os.path.join(os.path.expanduser("~"),".config" ,"guu")
     elif sys.platform.startswith('win'):
@@ -169,6 +167,7 @@ class qBitTorrent:
 class Misc:
     # Open link in web browser
     def openlink(url):
+        print("Opening ", str(url))
         open_new_tab(url)
     
     # Create torrent
@@ -192,7 +191,7 @@ class Misc:
             print("Created torrent OK.")
 
     # Check for updates
-    def update_check():
+    def get_guu_version():
         try:
             remote = requests.get("https://vancer0.github.io/guu/version.json", stream=True)
             data = json.loads(remote.text)
@@ -219,10 +218,6 @@ class Main(QMainWindow):
         self.fldrSelBtn.clicked.connect(self.select_folder)
         self.fileSelBtn.clicked.connect(self.select_file)
 
-        #self.categories = ['Select Category', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
-        #self.subcategories = ['(Optional)', 'Amateur', 'Anal', 'Anime Games', 'Asian', 'Bareback', 'BDSM', 'Bears', 'Black', 'Books & Magazines', 'Chubbies', 'Clips', 'Comic & Yaoi', 'Daddies / Sons', 'Dildos', 'Fan Sites', 'Fetish', 'Fisting', 'Grey / Older', 'Group-Sex', 'Homemade', 'Hunks', 'Images', 'Interracial', 'Jocks', 'Latino', 'Mature', 'Media Programs', 'Member', 'Middle Eastern', 'Military', 'Oral-Sex', 'Softcore', 'Solo', 'Theamed Movie', 'Trans', 'TV / Episodes', 'Twinks', 'Vintage', 'Voyeur', 'Wrestling and Sports', 'Youngblood']
-        #self.categories_num = [0, 62, 29, 46, 30, 43, 19, 17, 44, 50, 9, 7, 48, 5, 67, 66, 34, 68, 27, 32, 63, 12, 33, 53, 57, 35, 36, 58, 37, 54, 38, 39, 56, 40, 45, 47, 1, 41, 42, 51, 65, 28]
-
         self.load_categs()
 
         self.category.addItems(self.categories)
@@ -242,40 +237,7 @@ class Main(QMainWindow):
 
         self.checks()
 
-        ver = Misc.update_check()
-        if ver == 0:
-            QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
-            print("Cannot reach GitHub. Update check failed.")
-        elif ver > int(GUUVERSION):
-            if sys.platform.startswith('linux'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-                if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
-                else:
-                    pass
-            elif sys.platform.startswith('win'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-                if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
-                else:
-                    pass
-            elif sys.platform.startswith('darwin'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-                if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
-                else:
-                    pass
-            else:
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-                if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/tag/{}".format(str(ver)))
-                else:
-                    pass
-            print("New version available: {}".format(str(ver)))
-        elif ver == int(GUUVERSION):
-            print("No updates found.")
-        else:
-            print("Unknown error while checking updates.")
+        self.update_check()
     
     #################
     # GUI FUNCTIONS #
@@ -289,10 +251,12 @@ class Main(QMainWindow):
             r = session.get("https://www.gaytor.rent/qtm.php")
             global LOGIN_STATUS
             if r.status_code == 200:
+                print("Auto login OK")
                 LOGIN_STATUS = 1
                 self.checklogin(Settings.gtusr)
                 self.categ_reload()
             else:
+                print("Auto login failed")
                 LOGIN_STATUS = 0
                 self.checklogin('')
         else:
@@ -326,6 +290,43 @@ class Main(QMainWindow):
             self.statusLabel6.setText("Not logged in!")
             self.loginBtn.setText("Log In")
             self.loginBtn.clicked.connect(self.login)
+
+    # Check for updates
+    def update_check(self)
+        ver = Misc.get_guu_version()
+        if ver == 0:
+            QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
+            print("Cannot reach GitHub. Update check failed.")
+        elif ver > int(GUUVERSION):
+            if sys.platform.startswith('linux'):
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
+                else:
+                    pass
+            elif sys.platform.startswith('win'):
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
+                else:
+                    pass
+            elif sys.platform.startswith('darwin'):
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
+                else:
+                    pass
+            else:
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if choice == QMessageBox.StandardButton.Yes:
+                    Misc.openlink("https://github.com/vancer0/guu/releases/tag/{}".format(str(ver)))
+                else:
+                    pass
+            print("New version available: {}".format(str(ver)))
+        elif ver == int(GUUVERSION):
+            print("No updates found.")
+        else:
+            print("Unknown error while checking updates.")
 
     # Function to select a folder for the path
     def select_folder(self):
@@ -375,6 +376,7 @@ class Main(QMainWindow):
             self.enableitems()
             self.uploadStatus.setFormat('Waiting... (%p%)')
             self.uploadStatus.setValue(0)
+            print("Cleared all fields")
         else:
             pass
     
@@ -410,6 +412,7 @@ class Main(QMainWindow):
         categ_path = os.path.join(Settings.data_path, "categories.cache")
 
         if os.path.exists(categ_path):
+            print("Category cache exists")
             self.categories = ["Select Category"]
             self.subcategories = ["(Optional)"]
             self.categories_num = [0]
@@ -421,7 +424,9 @@ class Main(QMainWindow):
                         self.categories.append(b[1])
                         self.subcategories.append(b[1])
                         self.categories_num.append(b[0])
+            print("Loaded categories from cache")
         else:
+            print("Category cache does not exist")
             self.categories = ["Log in to load categories"]
             self.subcategories = ["Log in to load categories"]
             self.categories_num = [0]
@@ -430,6 +435,7 @@ class Main(QMainWindow):
     def categ_reload(self):
         global LOGIN_STATUS
         if LOGIN_STATUS == 1:
+            print("Fetching category list")
             r = session.get("https://www.gaytor.rent/genrelist.php")
             raw = str(r.text)[46:].split('\n')
 
@@ -456,11 +462,14 @@ class Main(QMainWindow):
             self.subcategory3.addItems(self.subcategories)
             self.subcategory4.addItems(self.subcategories)
 
+            print("Loaded categories from server")
+
             categ_path = os.path.join(Settings.data_path, "categories.cache")
             with open(categ_path, 'w') as f:
                 for c in raw:
                     f.writelines(c + '\n')
                 f.close()
+            print("Categories saved to cache")
         else:
             QMessageBox.warning(self, 'GUU', "You must be logged in to download the category list.")
 
@@ -633,6 +642,8 @@ class Main(QMainWindow):
                 QMessageBox.warning(self, 'GUU', "You do not have permission to save the torrent in the selected download folder.")
             except:
                 QMessageBox.warning(self, 'GUU', "An error occured while saving the torrent.")
+            else:
+                print("Torrent saved")
 
         if Settings.autodl == True:
             if Settings.webuihost == "localhost" or Settings.webuihost == "127.0.0.1":
@@ -671,6 +682,7 @@ class Main(QMainWindow):
 
         self.uploadStatus.setFormat('Creating torrent file... (%p%)')
         self.uploadStatus.setValue(1)
+
         # Try to create the cache folder
         try:
             os.mkdir(GUUPATH + '/.guucache')
