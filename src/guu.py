@@ -11,7 +11,7 @@ from configparser import RawConfigParser
 import json
 import libtorrent
 from qbittorrentapi import Client as QBitClient
-from requests.exceptions import Timeout
+from requests.exceptions import Timeout, ConnectionError
 
 GUUVERSION = '1'
 
@@ -234,9 +234,10 @@ class Main(QMainWindow):
     def checks(self):
         try:
             r = session.head('https://www.gaytor.rent', timeout=3)
-        except Timeout:
+        except(Timeout, ConnectionError):
             print("Failed to connect to server")
             self.statusLabel4.setText("Unreachable")
+            self.checklogin('')
         else:
             if r.status_code == 200:
                 self.statusLabel4.setText("Online")
@@ -248,12 +249,13 @@ class Main(QMainWindow):
                     r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
                 except Timeout:
                     print("Failed to connect to server")
+                    self.checklogin('')
 
                 try:
                     r = session.head("https://www.gaytor.rent/qtm.php", timeout=3)
                 except Timeout:
                     print("Failed to connect to server")
-
+                    self.checklogin('')
 
                 global LOGIN_STATUS
                 if r.status_code == 200:
