@@ -19,17 +19,11 @@ Gaytor.rent Upload Utility is a cross-platform open source program that can auto
 There are two ways to run this program:
 1. **Get the build** from the [Releases](https://github.com/vancer0/guu/releases) page.
 
-2. **Run the program directly** from the source (make sure both Python 3.10 and Qt are installed on your computer):
+2. **(ADVANCED) Run the program directly** from the source (make sure both Python 3.10 and Qt are installed on your computer):
     1. Clone the repository `git clone https://github.com/vancer0/guu.git`
     2. Change to the program source directory `cd guu/src`
-    3. Install the dependencies `pip install -r requirements.txt`
+    3. Install the dependencies `python -m pip install -r requirements.txt`
     4. Run GUU `python guu.py`
-
-## To-Do
-
-- Drag and Drop functionality for the picture list
-- Support more torrent clients
-- Make the program translatable
 
 ## License
 
