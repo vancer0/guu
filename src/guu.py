@@ -9,7 +9,7 @@ import os
 from bs4 import BeautifulSoup
 from configparser import RawConfigParser
 import json
-import libtorrent
+import libtorrent as lt
 from qbittorrentapi import Client as QBitClient
 from requests.exceptions import Timeout, ConnectionError
 
@@ -30,13 +30,17 @@ GT_STATUS = 0
 
 class Settings:
     if sys.platform.startswith('linux'):
-        data_path = os.path.join(os.path.expanduser("~"),".config" ,"guu")
+        data_path = os.path.join(os.path.expanduser("~"),
+                                 ".config", "guu")
     elif sys.platform.startswith('win'):
-        data_path = os.path.join(os.path.expanduser("~"),"AppData", "Roaming" ,"guu")
+        data_path = os.path.join(os.path.expanduser("~"),
+                                 "AppData", "Roaming", "guu")
     elif sys.platform.startswith('darwin'):
-        data_path = os.path.join(os.path.expanduser("~"),"Library", "Preferences" ,"guu")
+        data_path = os.path.join(os.path.expanduser("~"),
+                                 "Library", "Preferences", "guu")
     else:
-        data_path = os.path.join(os.path.expanduser("~"),".config" ,"guu")
+        data_path = os.path.join(os.path.expanduser("~"),
+                                 ".config", "guu")
 
     os.makedirs(data_path, exist_ok=True)
 
@@ -87,7 +91,8 @@ class Settings:
     saveupld = bool(int(config['UPLOADING']['Save_Uploads']))
     savepath = config['UPLOADING']['Save_Path']
 
-    def save(language, savelgn, gtusr, gtpwd, autodl, client, webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath):
+    def save(language, savelgn, gtusr, gtpwd, autodl, client,
+             webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath):
         if not Settings.config.has_section('GENERAL'):
             Settings.config.add_section("GENERAL")
         Settings.config.set("GENERAL", "Language", language)
@@ -130,7 +135,7 @@ class Settings:
 
 class qBitTorrent:
     global CLIENT_STATUS
-    if Settings.autodl == True:
+    if Settings.autodl:
         try:
             requests.head("http://" + Settings.webuihost + ":" + Settings.webuiport, timeout=3)
         except(Timeout, ConnectionError):
@@ -140,9 +145,9 @@ class qBitTorrent:
             print("Client WebUI found.")
             try:
                 qbt_client = QBitClient(
-                    host=Settings.webuihost, 
-                    port=Settings.webuiport, 
-                    username=Settings.webuiusr, 
+                    host=Settings.webuihost,
+                    port=Settings.webuiport,
+                    username=Settings.webuiusr,
                     password=Settings.webuipwd)
                 qbt_client.auth_log_in()
             except Exception:
@@ -158,7 +163,7 @@ class Misc:
     def openlink(url):
         print("Opening ", str(url))
         open_new_tab(url)
-    
+
     # Create torrent
     def create_torrent(path, dirp):
         global GUUPATH
@@ -179,18 +184,20 @@ class Misc:
     # Check for updates
     def get_guu_version():
         try:
-            remote = requests.get("https://vancer0.github.io/guu/version.json", stream=True, timeout=3)
+            remote = requests.get("https://vancer0.github.io/guu/version.json",
+                                  stream=True, timeout=3)
             data = json.loads(remote.text)
             ver = int(data["version"])
             return ver
-        except:
+        except Exception:
             return 0
+
 
 class Main(QMainWindow):
     def __init__(self):
         global GUUPATH
         super(Main, self).__init__()
-        loadUi(GUUPATH + '/ui/gui.ui' ,self)
+        loadUi(GUUPATH + '/ui/gui.ui', self)
         print("Drawing window")
 
         self.actionNew.triggered.connect(self.wipe)
@@ -225,12 +232,13 @@ class Main(QMainWindow):
         self.checks()
 
         self.update_check()
-    
+
     #################
     # GUI FUNCTIONS #
     #################
 
-    # Executes several checks to update the Status section, auto logs in if it is selected in the settings
+    # Executes several checks to update the Status section, auto logs in if it
+    # is selected in the settings
     def checks(self):
         try:
             r = session.head('https://www.gaytor.rent', timeout=3)
@@ -243,16 +251,19 @@ class Main(QMainWindow):
                 self.statusLabel4.setText("Online")
             else:
                 self.statusLabel4.setText("Unreachable")
-            if Settings.savelgn == True:
-                login_data = {'username': Settings.gtusr, 'password': Settings.gtpwd}
+            if Settings.savelgn:
+                login_data = {'username': Settings.gtusr,
+                              'password': Settings.gtpwd}
                 try:
-                    r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
+                    r = session.post("https://www.gaytor.rent/takelogin.php",
+                                     params=login_data, timeout=3)
                 except(Timeout, ConnectionError):
                     print("Failed to connect to server")
                     self.checklogin('')
 
                 try:
-                    r = session.head("https://www.gaytor.rent/qtm.php", timeout=3)
+                    r = session.head("https://www.gaytor.rent/qtm.php",
+                                     timeout=3)
                 except(Timeout, ConnectionError):
                     print("Failed to connect to server")
                     self.checklogin('')
@@ -277,7 +288,7 @@ class Main(QMainWindow):
             self.statusLabel2.setText("Invalid credentials")
         else:
             self.statusLabel2.setText("None")
-    
+
     # Checks the login status for the Status section
     def checklogin(self, usr):
         if LOGIN_STATUS == 1:
@@ -333,23 +344,25 @@ class Main(QMainWindow):
         if folderpath:
             self.path.clear()
             self.path.insert(folderpath)
-    
+
     # Function to select a file for the path
     def select_file(self):
-        filepath = QFileDialog.getOpenFileName(self, 'Select File', '~',"All files (*.*)")
+        filepath = QFileDialog.getOpenFileName(self, 'Select File', '~',
+                                               "All files (*.*)")
         if filepath:
             self.path.clear()
             self.path.insert(filepath[0])
 
     # Adds pictures to the list
     def add_pictures(self):
-        filenames = QFileDialog.getOpenFileNames(self, 'Select Image(s)', '~',"Images (*.png *.jpg *.jpeg *.bmp *.tif *.psd)")
+        filenames = QFileDialog.getOpenFileNames(self, 'Select Image(s)', '~',
+                                                 "Images (*.png *.jpg *.jpeg *.bmp *.tif *.psd)")
         if filenames:
             for pic in filenames[0]:
                 self.picn = self.picn + 1
-                #filesize = os.path.getsize(pic)
-                #filesize_e = str(round((filesize / 1000000), 2)) + " MB"
-                #self.model.appendRow([QStandardItem(str(self.picn)), QStandardItem(pic), QStandardItem(filesize_e)])
+                # filesize = os.path.getsize(pic)
+                # filesize_e = str(round((filesize / 1000000), 2)) + " MB"
+                # self.model.appendRow([QStandardItem(str(self.picn)), QStandardItem(pic), QStandardItem(filesize_e)])
                 self.picTable.addItem(pic)
 
     # Removes selected pictures from the list
@@ -358,7 +371,7 @@ class Main(QMainWindow):
         for i in range(len(items)):
             x = self.picTable.selectedIndexes()[0].row()
             self.picTable.takeItem(x)
-    
+
     # Resets all inputs
     def wipe(self):
         choice = QMessageBox.question(self, 'New project', "Are you sure you want to start a new project?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
@@ -378,7 +391,7 @@ class Main(QMainWindow):
             print("Cleared all fields")
         else:
             pass
-    
+
     # Enables or disables the input widgets based on whether a main category is selected or not
     def enableitems(self):
         if self.category.currentIndex() == 0:
@@ -429,7 +442,7 @@ class Main(QMainWindow):
             self.categories = ["Log in to load categories"]
             self.subcategories = ["Log in to load categories"]
             self.categories_num = [0]
-    
+
     # Pulls the category list from the website
     def categ_reload(self):
         global LOGIN_STATUS
@@ -485,7 +498,7 @@ class Main(QMainWindow):
             QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
         else:
             Misc.openlink("http://" + Settings.webuihost + ':' + Settings.webuiport)
-    
+
     #########################
     # ABOUT WINDOW FUNCTION #
     #########################
@@ -531,10 +544,10 @@ class Main(QMainWindow):
         self.setwin.saveSetBtn.setShortcut("Return")
         self.set_enablegt()
         self.set_enableclient()
-    
+
     # Enables or disables the client input widgets based on whether auto seeding is enabled or not
     def set_enableclient(self):
-        if self.setwin.autoDl.isChecked() == True:
+        if self.setwin.autoDl.isChecked():
             self.setwin.torrentClient.setEnabled(True)
             self.setwin.webuiHost.setEnabled(True)
             self.setwin.webuiPort.setEnabled(True)
@@ -546,25 +559,25 @@ class Main(QMainWindow):
             self.setwin.webuiPort.setEnabled(False)
             self.setwin.webuiUser.setEnabled(False)
             self.setwin.webuiPwd.setEnabled(False)
-    
+
     # Enables or disables the gaytor.rent input widgets based on whether saving credentials is enabled or not
     def set_enablegt(self):
-        if self.setwin.autoLogin.isChecked() == True:
+        if self.setwin.autoLogin.isChecked():
             self.setwin.gtUsername.setEnabled(True)
             self.setwin.gtPassword.setEnabled(True)
         else:
             self.setwin.gtUsername.setEnabled(False)
             self.setwin.gtPassword.setEnabled(False)
-    
+
     # Enables or disables the download widgets based on whether it is enabled or not
     def set_enabledl(self):
-        if self.setwin.saveUploads.isChecked() == True:
+        if self.setwin.saveUploads.isChecked():
             self.setwin.savePath.setEnabled(True)
             self.setwin.savePathBrowse.setEnabled(True)
         else:
             self.setwin.savePath.setEnabled(False)
             self.setwin.savePathBrowse.setEnabled(False)
-    
+
     # Sends all the input values to the settings class to be saved
     def save_settings(self):
         language = "en"
@@ -580,15 +593,16 @@ class Main(QMainWindow):
         saveupld = int(self.setwin.saveUploads.isChecked())
         savepath = self.setwin.savePath.text()
 
-        Settings.save(language, savelgn, gtusr, gtpwd, autodl, client, webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath)
+        Settings.save(language, savelgn, gtusr, gtpwd, autodl, client,
+                      webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath)
 
         self.setwin.close()
         QMessageBox.information(self, 'GUU', "Please restart the program for the changes to take effect.")
-    
+
     #######################
     # UPLOADING FUNCTIONS #
     #######################
-    
+
     # Executes several checks to ensure that the user can proceed to uploading
     def uplchecks(self):
         choice = QMessageBox.question(self, 'GUU', "Are you sure you want to upload?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
@@ -610,7 +624,7 @@ class Main(QMainWindow):
                     self.uploadmanager()
                 else:
                     QMessageBox.warning(self, 'GUU', "Please log in to Gaytor.rent before uploading.")
-    
+
     # Controlls the several upload functions according to the user settings
     def uploadmanager(self):
         global GUUPATH
@@ -635,7 +649,7 @@ class Main(QMainWindow):
 
         self.upload()
 
-        if Settings.saveupld == True:
+        if Settings.saveupld:
             self.download()
             try:
                 shutil.copy(GUUPATH + '/.guucache/dl.torrent', '"' + os.dirname(Settings.savepath + '/') + '/' + self.tor_title_var + '.torrent"')
@@ -646,7 +660,7 @@ class Main(QMainWindow):
             else:
                 print("Torrent saved")
 
-        if Settings.autodl == True:
+        if Settings.autodl:
             if Settings.webuihost == "localhost" or Settings.webuihost == "127.0.0.1":
                 self.dlpath = self.dirpath
                 self.download()
@@ -675,7 +689,7 @@ class Main(QMainWindow):
             self.uploadStatus.setFormat('Done! (%p%)')
             self.uploadStatus.setValue(8)
             QMessageBox.information(self, 'GUU', "Upload complete!")
-    
+
     # Uploads the torrent
     def upload(self):
         global GUUPATH
@@ -708,27 +722,28 @@ class Main(QMainWindow):
             return
         else:
             print("Uploaded pictures OK.")
-        
+
         self.uploadStatus.setFormat('Gathering picture IDs... (%p%)')
         self.uploadStatus.setValue(3)
 
         # Get picture IDs
         pidlist = []
-        def getdata(url): 
+
+        def getdata(url):
             try:
                 r = session.get(url, timeout=3)
             except(Timeout, ConnectionError):
                 print("Failed to connect to server")
             return r.text
-        htmldata = getdata(url) 
-        soup = BeautifulSoup(htmldata, 'html.parser') 
+        htmldata = getdata(url)
+        soup = BeautifulSoup(htmldata, 'html.parser')
         for item in soup.find_all('img'):
             tmp = item["src"]
-            if tmp.startswith('/tpics') == True:
+            if tmp.startswith('/tpics'):
                 pid = tmp[15:tmp.rfind(".")]
                 pidlist.insert(piccount, pid)
         print("Gathered picture IDs OK.")
-        
+
         self.uploadStatus.setFormat('Uploading torrent... (%p%)')
         self.uploadStatus.setValue(4)
 
@@ -740,10 +755,10 @@ class Main(QMainWindow):
         for pid in pidlist:
             uplpic_id = 'uplpic' + pid
             upload_data[uplpic_id] = pid
-        
+
         # Upload the data
         try:
-            r = session.post(url, data = upload_data, files = tor_file, timeout=3) # Post upload data
+            r = session.post(url, data=upload_data, files=tor_file, timeout=3)
         except(Timeout, ConnectionError):
             print("Failed to connect to server")
             return
@@ -752,15 +767,15 @@ class Main(QMainWindow):
 
         # Get the uploaded torrent's URL send it to the download function
         self.tor_url = r.url
-    
+
     # Downloads the uploaded torrent
     def download(self):
         global GUUPATH
         self.uploadStatus.setFormat('Getting torrent ID... (%p%)')
         self.uploadStatus.setValue(5)
         tor_id = self.tor_url[41:89] # Get torrent ID
-        urle = "https://www.gaytor.rent/download.php/" + tor_id + "/dl.torrent" # Create the download link
-        
+        urle = "https://www.gaytor.rent/download.php/" + tor_id + "/dl.torrent"
+
         self.uploadStatus.setFormat('Downloading torrent... (%p%)')
         self.uploadStatus.setValue(6)
 
@@ -768,14 +783,14 @@ class Main(QMainWindow):
         try:
             with session.get(urle, timeout=3) as r:
                 with open(GUUPATH + '/.guucache/dl.torrent', 'wb') as f:
-                    for chunk in r.iter_content(chunk_size = 16*1024):
+                    for chunk in r.iter_content(chunk_size=16*1024):
                         f.write(chunk)
         except(Timeout, ConnectionError):
             print("Failed to connect to server")
             return
         else:
             print("Downloaded torrent OK.")
-    
+
     # Adds the downloaded torrent to the torrent client for seeding
     def seed(self):
         global GUUPATH
@@ -787,7 +802,7 @@ class Main(QMainWindow):
     ###################
     # LOGIN FUNCTIONS #
     ###################
-    
+
     # Opens login window if user is not logged in, logs out if user is logged in.
     def login(self):
         global LOGIN_STATUS
@@ -799,21 +814,22 @@ class Main(QMainWindow):
             self.logwin.logwinBtn.setShortcut("Return")
         else:
             try:
-                r = session.get("https://www.gaytor.rent/logout.php", timeout=3)
+                session.get("https://www.gaytor.rent/logout.php", timeout=3)
             except(Timeout, ConnectionError):
                 print("Failed to connect to server")
             else:
                 LOGIN_STATUS = 0
             self.checklogin('')
-    
+
     # Sends login credentials to the website for authentication
     def sendlogin(self):
         usr = self.logwin.username.text()
         pwd = self.logwin.password.text()
 
-        login_data = {'username': usr, 'password': pwd} 
+        login_data = {'username': usr, 'password': pwd}
         try:
-            r = session.post("https://www.gaytor.rent/takelogin.php", params = login_data, timeout=3)
+            r = session.post("https://www.gaytor.rent/takelogin.php",
+                             params=login_data, timeout=3)
         except(Timeout, ConnectionError):
             print("Failed to connect to server")
 
@@ -830,7 +846,7 @@ class Main(QMainWindow):
             LOGIN_STATUS = 0
 
         if LOGIN_STATUS == 1:
-            if self.logwin.credSave.isChecked() == True:
+            if self.logwin.credSave.isChecked():
                 savelgn = int(self.logwin.credSave.isChecked())
                 Settings.login_save(savelgn, usr, pwd)
             self.categ_reload()
@@ -838,14 +854,15 @@ class Main(QMainWindow):
             self.checklogin(usr)
         else:
             QMessageBox.warning(self, 'GUU', "Login failed!")
-    
+
     ######################
     # PROJECTS FUNCTIONS #
     ######################
-    
+
     # Clears input widgets and loads the selected project file
     def openproj(self):
-        filename = QFileDialog.getOpenFileName(self, 'Open Project', '~',"GUU Files (*.guu)")
+        filename = QFileDialog.getOpenFileName(self, 'Open Project', '~',
+                                               "GUU Files (*.guu)")
         if filename == ('', ''):
             return
         else:
@@ -876,7 +893,7 @@ class Main(QMainWindow):
         self.uploadStatus.setValue(0)
         self.uploadStatus.setFormat('Waiting... (%p%)')
         print("Loaded project OK.")
-    
+
     # Saves all input values to a project file
     def saveproj(self):
         mc = self.category.currentIndex()
@@ -896,14 +913,21 @@ class Main(QMainWindow):
             piclist.insert(piccount, value)
             piccount = piccount - 1
 
-        saveas = QFileDialog.getSaveFileName(self, 'Save File', 'Untitled.guu', "GUU Files (*.guu)")
+        saveas = QFileDialog.getSaveFileName(self, 'Save File', 'Untitled.guu',
+                                             "GUU Files (*.guu)")
 
         if saveas is None:
             return
         else:
             data = {}
-            data['Categories'] = {"Main": mc, "Secondary1": sc1, "Secondary2": sc2, "Secondary3": sc3, "Secondary4": sc4}
-            data['Info'] = {"Title": tor_title_var, "Description": tor_desc_var, "Path": path_var}
+            data['Categories'] = {"Main": mc,
+                                  "Secondary1": sc1,
+                                  "Secondary2": sc2,
+                                  "Secondary3": sc3,
+                                  "Secondary4": sc4}
+            data['Info'] = {"Title": tor_title_var,
+                            "Description": tor_desc_var,
+                            "Path": path_var}
             data['Pictures'] = {"Path(s)": piclist}
             i = saveas[0]
             if i[len(i)-4:len(i)] == ".guu":

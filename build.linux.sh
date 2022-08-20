@@ -30,5 +30,6 @@ rm appimagetool-*-x86_64.AppImage
 rm -r squashfs-root
 
 # Copy executable
+rm -r bin
 mkdir bin
 mv GUU-$VERSION-$ARCH.AppImage bin/GUU-Linux-$ARCH.AppImage
