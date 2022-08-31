@@ -13,9 +13,9 @@ import libtorrent as lt
 from qbittorrentapi import Client as QBitClient
 from requests.exceptions import Timeout, ConnectionError
 
-GUUVERSION = '2'
+GUUVERSION = '3'
 
-session = requests.Session() # Main web session
+session = requests.Session()  # Main web session
 
 # Get directory of program
 if getattr(sys, 'frozen', False):
@@ -137,7 +137,8 @@ class qBitTorrent:
     global CLIENT_STATUS
     if Settings.autodl:
         try:
-            requests.head("http://" + Settings.webuihost + ":" + Settings.webuiport, timeout=3)
+            requests.head("http://" + Settings.webuihost +
+                          ":" + Settings.webuiport, timeout=3)
         except(Timeout, ConnectionError):
             print("Client WebUI unreachable.")
             CLIENT_STATUS = 0
@@ -305,31 +306,40 @@ class Main(QMainWindow):
     def update_check(self):
         ver = Misc.get_guu_version()
         if ver == 0:
-            QMessageBox.warning(self, 'GUU', "An error occured while checking for updates.")
+            QMessageBox.warning(
+                self, 'GUU', "An error occured while checking for updates.")
             print("Cannot reach GitHub. Update check failed.")
         elif ver > int(GUUVERSION):
             if sys.platform.startswith('linux'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?",
+                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
+                    Misc.openlink(
+                        "https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage")
                 else:
                     pass
             elif sys.platform.startswith('win'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?",
+                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
+                    Misc.openlink(
+                        "https://github.com/vancer0/guu/releases/latest/download/GUU-Win-x86_64.exe")
                 else:
                     pass
             elif sys.platform.startswith('darwin'):
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?",
+                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
+                    Misc.openlink(
+                        "https://github.com/vancer0/guu/releases/latest/download/GUU-Mac-x86_64.dmg")
                 else:
                     pass
             else:
-                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?",
+                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                 if choice == QMessageBox.StandardButton.Yes:
-                    Misc.openlink("https://github.com/vancer0/guu/releases/tag/{}".format(str(ver)))
+                    Misc.openlink(
+                        "https://github.com/vancer0/guu/releases/tag/{}".format(str(ver)))
                 else:
                     pass
             print("New version available: {}".format(str(ver)))
@@ -340,7 +350,8 @@ class Main(QMainWindow):
 
     # Function to select a folder for the path
     def select_folder(self):
-        folderpath = QFileDialog.getExistingDirectory(self, "Select Folder", "~")
+        folderpath = QFileDialog.getExistingDirectory(
+            self, "Select Folder", "~")
         if folderpath:
             self.path.clear()
             self.path.insert(folderpath)
@@ -374,7 +385,8 @@ class Main(QMainWindow):
 
     # Resets all inputs
     def wipe(self):
-        choice = QMessageBox.question(self, 'New project', "Are you sure you want to start a new project?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        choice = QMessageBox.question(self, 'New project', "Are you sure you want to start a new project?",
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if choice == QMessageBox.StandardButton.Yes:
             self.path.clear()
             self.category.setCurrentIndex(0)
@@ -449,7 +461,8 @@ class Main(QMainWindow):
         if LOGIN_STATUS == 1:
             print("Fetching category list")
             try:
-                r = session.get("https://www.gaytor.rent/genrelist.php", timeout=3)
+                r = session.get(
+                    "https://www.gaytor.rent/genrelist.php", timeout=3)
             except(Timeout, ConnectionError):
                 print("Failed to connect to server")
                 return
@@ -487,17 +500,21 @@ class Main(QMainWindow):
                 f.close()
             print("Categories saved to cache")
         else:
-            QMessageBox.warning(self, 'GUU', "You must be logged in to download the category list.")
+            QMessageBox.warning(
+                self, 'GUU', "You must be logged in to download the category list.")
 
     # Opens the torrent client's web UI
     def openwebui(self):
         global CLIENT_STATUS
         if CLIENT_STATUS == 0:
-            QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please make sure it is running and try again.")
+            QMessageBox.warning(
+                self, 'GUU', "Cannot communicate with the torrent client. Please make sure it is running and try again.")
         elif CLIENT_STATUS == 2:
-            QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
+            QMessageBox.warning(
+                self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
         else:
-            Misc.openlink("http://" + Settings.webuihost + ':' + Settings.webuiport)
+            Misc.openlink("http://" + Settings.webuihost +
+                          ':' + Settings.webuiport)
 
     #########################
     # ABOUT WINDOW FUNCTION #
@@ -510,17 +527,23 @@ class Main(QMainWindow):
         loadUi(GUUPATH + '/ui/about.ui', self.aboutwin)
         self.aboutwin.show()
         global GUUVERSION
-        self.aboutwin.label.setText('<html><head/><body><p><span style=\" font-size:18pt;\">Gaytor.rent Upload Utility v' + GUUVERSION + '</span></p></body></html>')
-        self.aboutwin.label_4.linkActivated.connect(lambda: Misc.openlink("https://www.gnu.org/licenses/gpl-3.0-standalone.html"))
-        self.aboutwin.label_8.linkActivated.connect(lambda: Misc.openlink("https://github.com/psf/requests"))
-        self.aboutwin.label_9.linkActivated.connect(lambda: Misc.openlink("https://www.crummy.com/software/BeautifulSoup"))
-        self.aboutwin.label_10.linkActivated.connect(lambda: Misc.openlink("https://github.com/arvidn/libtorrent"))
-        self.aboutwin.label_11.linkActivated.connect(lambda: Misc.openlink("https://github.com/rmartin16/qbittorrent-api"))
+        self.aboutwin.label.setText(
+            '<html><head/><body><p><span style=\" font-size:18pt;\">Gaytor.rent Upload Utility v' + GUUVERSION + '</span></p></body></html>')
+        self.aboutwin.label_4.linkActivated.connect(lambda: Misc.openlink(
+            "https://www.gnu.org/licenses/gpl-3.0-standalone.html"))
+        self.aboutwin.label_8.linkActivated.connect(
+            lambda: Misc.openlink("https://github.com/psf/requests"))
+        self.aboutwin.label_9.linkActivated.connect(
+            lambda: Misc.openlink("https://www.crummy.com/software/BeautifulSoup"))
+        self.aboutwin.label_10.linkActivated.connect(
+            lambda: Misc.openlink("https://github.com/arvidn/libtorrent"))
+        self.aboutwin.label_11.linkActivated.connect(
+            lambda: Misc.openlink("https://github.com/rmartin16/qbittorrent-api"))
 
     #############################
     # SETTINGS WINDOW FUNCTIONS #
     #############################
-    
+
     # Opens settings window
     def open_settings(self):
         global GUUPATH
@@ -597,7 +620,8 @@ class Main(QMainWindow):
                       webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath)
 
         self.setwin.close()
-        QMessageBox.information(self, 'GUU', "Please restart the program for the changes to take effect.")
+        QMessageBox.information(
+            self, 'GUU', "Please restart the program for the changes to take effect.")
 
     #######################
     # UPLOADING FUNCTIONS #
@@ -605,25 +629,30 @@ class Main(QMainWindow):
 
     # Executes several checks to ensure that the user can proceed to uploading
     def uplchecks(self):
-        choice = QMessageBox.question(self, 'GUU', "Are you sure you want to upload?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        choice = QMessageBox.question(self, 'GUU', "Are you sure you want to upload?",
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if choice == QMessageBox.StandardButton.Yes:
             global CLIENT_STATUS
             global LOGIN_STATUS
             if Settings.autodl == True:
                 if CLIENT_STATUS == 0:
-                    QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please make sure it is running and try again.")
+                    QMessageBox.warning(
+                        self, 'GUU', "Cannot communicate with the torrent client. Please make sure it is running and try again.")
                 elif CLIENT_STATUS == 2:
-                    QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
+                    QMessageBox.warning(
+                        self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
                 else:
                     if LOGIN_STATUS == 1:
                         self.uploadmanager()
                     else:
-                        QMessageBox.warning(self, 'GUU', "Please log in to Gaytor.rent before uploading.")
+                        QMessageBox.warning(
+                            self, 'GUU', "Please log in to Gaytor.rent before uploading.")
             else:
                 if LOGIN_STATUS == 1:
                     self.uploadmanager()
                 else:
-                    QMessageBox.warning(self, 'GUU', "Please log in to Gaytor.rent before uploading.")
+                    QMessageBox.warning(
+                        self, 'GUU', "Please log in to Gaytor.rent before uploading.")
 
     # Controlls the several upload functions according to the user settings
     def uploadmanager(self):
@@ -652,11 +681,14 @@ class Main(QMainWindow):
         if Settings.saveupld:
             self.download()
             try:
-                shutil.copy(GUUPATH + '/.guucache/dl.torrent', '"' + os.dirname(Settings.savepath + '/') + '/' + self.tor_title_var + '.torrent"')
+                shutil.copy(GUUPATH + '/.guucache/dl.torrent', '"' + os.dirname(
+                    Settings.savepath + '/') + '/' + self.tor_title_var + '.torrent"')
             except shutil.SameFileError:
-                QMessageBox.warning(self, 'GUU', "Torrent already exists in the download folder.")
+                QMessageBox.warning(
+                    self, 'GUU', "Torrent already exists in the download folder.")
             except PermissionError:
-                QMessageBox.warning(self, 'GUU', "You do not have permission to save the torrent in the selected download folder.")
+                QMessageBox.warning(
+                    self, 'GUU', "You do not have permission to save the torrent in the selected download folder.")
             else:
                 print("Torrent saved")
 
@@ -673,6 +705,7 @@ class Main(QMainWindow):
                 self.dlwin = QWidget()
                 loadUi(GUUPATH + '/ui/dlselect.ui', self.dlwin)
                 self.dlwin.show()
+
                 def get():
                     self.dlpath = self.dlwin.remotePath.text()
                     self.dlwin.close()
@@ -748,7 +781,8 @@ class Main(QMainWindow):
         self.uploadStatus.setValue(4)
 
         # Gather upload data
-        upload_data = {'MAX_FILE_SIZE': 40000000, 'type': self.mc, 'scat1': self.sc1, 'scat2': self.sc2, 'scat3': self.sc3, 'scat4': self.sc4, 'ulpic[]': '', 'name': self.tor_title_var, 'infourl': '', 'descr': self.tor_desc_var, 'checktorrent': 'Do it!'}
+        upload_data = {'MAX_FILE_SIZE': 40000000, 'type': self.mc, 'scat1': self.sc1, 'scat2': self.sc2, 'scat3': self.sc3,
+                       'scat4': self.sc4, 'ulpic[]': '', 'name': self.tor_title_var, 'infourl': '', 'descr': self.tor_desc_var, 'checktorrent': 'Do it!'}
         tor_file = {'file': open(GUUPATH + '/.guucache/upl.torrent', 'rb')}
 
         # Add picture IDs to upload data
@@ -773,7 +807,7 @@ class Main(QMainWindow):
         global GUUPATH
         self.uploadStatus.setFormat('Getting torrent ID... (%p%)')
         self.uploadStatus.setValue(5)
-        tor_id = self.tor_url[41:89] # Get torrent ID
+        tor_id = self.tor_url[41:89]  # Get torrent ID
         urle = "https://www.gaytor.rent/download.php/" + tor_id + "/dl.torrent"
 
         self.uploadStatus.setFormat('Downloading torrent... (%p%)')
@@ -796,7 +830,8 @@ class Main(QMainWindow):
         global GUUPATH
         self.uploadStatus.setFormat('Adding torrent to the client... (%p%)')
         self.uploadStatus.setValue(7)
-        qBitTorrent.qbt_client.torrents_add(torrent_files=GUUPATH + '/.guucache/dl.torrent', savepath=self.dlpath, is_paused=False)
+        qBitTorrent.qbt_client.torrents_add(
+            torrent_files=GUUPATH + '/.guucache/dl.torrent', savepath=self.dlpath, is_paused=False)
         print("Added torrent to client OK.")
 
     ###################
