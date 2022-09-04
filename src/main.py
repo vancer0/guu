@@ -609,7 +609,7 @@ class Main(QMainWindow):
     def login(self):
         if api.login_status == 0:
             self.logwin = QWidget()
-            loadUi(os.path.join(GUUPATH, "ui," "login.ui"), self.logwin)
+            loadUi(os.path.join(GUUPATH, "ui" "login.ui"), self.logwin)
             self.logwin.show()
             self.set_login_lang()
             self.logwin.logwinBtn.clicked.connect(self.sendlogin)
