@@ -116,4 +116,5 @@ class Settings:
             self.config.set("CLIENT", "client", "qBitTorrent")
             with open(self.config_path, 'w') as config_file:
                 self.config.write(config_file)
+            self.load_config()
             print("GUU: Config converted")
