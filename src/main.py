@@ -254,6 +254,7 @@ class Main(QMainWindow):
                 try:
                     c = json.load(f)
                 except JSONDecodeError:
+                    f.close()
                     os.remove(categ_path)
                     print("GUU: Category cache does not exist")
                     self.categories = [lang.ui.categories_login_error]
