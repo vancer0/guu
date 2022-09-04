@@ -5,7 +5,6 @@ import requests
 from requests import Timeout, ConnectionError
 import sys
 import os
-import shutil
 
 from constants import version
 from clients import QBitTorrent

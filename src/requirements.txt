@@ -4,4 +4,3 @@ bs4
 libtorrent
 qbittorrent-api
 pyqtdarktheme
-darkdetect
