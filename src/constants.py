@@ -2,7 +2,8 @@
 version = '4'
 
 # Languages
-languages = ["English"]
+languages = ["en"]
+languages_full = ["English"]
 
 # Themes
 themes = ["system", "dark", "light"]

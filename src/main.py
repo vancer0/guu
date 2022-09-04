@@ -10,8 +10,9 @@ import qdarktheme
 
 from settings import Settings
 from misc import Misc
-from constants import version, themes, torrent_clients, languages
+from constants import version, themes, torrent_clients, languages, languages_full
 from api import GayTorrent
+from language import Language
 
 
 class Main(QMainWindow):
@@ -20,6 +21,8 @@ class Main(QMainWindow):
         super(Main, self).__init__()
         loadUi(os.path.join(GUUPATH, "ui", "gui.ui"), self)
         print("GUU: Drawing window")
+
+        self.set_lang()
 
         self.actionNew.triggered.connect(self.wipe)
         self.actionOpen.triggered.connect(self.openproj)
@@ -58,15 +61,58 @@ class Main(QMainWindow):
     # GUI FUNCTIONS #
     #################
 
+    # Changes all text to this from the language file
+    def set_lang(self):
+        self.menuFile.setTitle(lang.ui.file)
+        self.actionExit.setText(lang.ui.exit)
+        self.actionNew.setText(lang.ui.new)
+        self.actionOpen.setText(lang.ui.open)
+        self.actionSave.setText(lang.ui.save)
+
+        self.menuTools.setTitle(lang.ui.tools)
+        self.actionOpen_WebUI.setText(lang.ui.open_webui)
+        self.actionPreferences.setText(lang.ui.preferences)
+        self.actionReload_categories.setText(lang.ui.reload_categories)
+
+        self.menuHelp.setTitle(lang.ui.help)
+        self.actionAbout.setText(lang.ui.about)
+
+        self.fileBox.setTitle(lang.ui.file)
+        self.pathLabel.setText(lang.ui.path)
+        self.fldrSelBtn.setText(lang.ui.select_folder)
+        self.fileSelBtn.setText(lang.ui.select_file)
+
+        self.categoriesBox.setTitle(lang.ui.categories)
+        self.catLabel.setText(lang.ui.category)
+        self.sc1Label.setText(lang.ui.subcategory1)
+        self.sc2Label.setText(lang.ui.subcategory2)
+        self.sc3Label.setText(lang.ui.subcategory3)
+        self.sc4Label.setText(lang.ui.subcategory4)
+
+        self.picturesBox.setTitle(lang.ui.pictures)
+        self.addPicBtn.setText(lang.ui.add_pictures)
+        self.rmPicBtn.setText(lang.ui.remove_pictures)
+
+        self.infoBox.setTitle(lang.ui.info)
+        self.titleLabel.setText(lang.ui.title)
+        self.descLabel.setText(lang.ui.description)
+        self.uploadStatus.setFormat(lang.ui.waiting)
+        self.uploadBtn.setText(lang.ui.upload)
+
+        self.statusBox.setTitle(lang.ui.status)
+        self.statusLabel1.setText(lang.ui.torrent_client)
+        self.statusLabel5.setText(lang.ui.user)
+        self.loginBtn.setText(lang.ui.login)
+
     # Executes several checks to update the Status section, auto logs in if it
     # is selected in the settings
     def checks(self):
         api.check_server_status()
         if api.server_status == 0:
-            self.statusLabel4.setText("Unreachable")
+            self.statusLabel4.setText(lang.ui.unreachable)
             self.checklogin('')
         else:
-            self.statusLabel4.setText("Online")
+            self.statusLabel4.setText(lang.ui.online)
 
             if cfg.savelgn:
                 api.send_login_data(cfg.gtusr, cfg.gtpwd)
@@ -83,29 +129,29 @@ class Main(QMainWindow):
                 self.checklogin('')
 
         if client.status == 1:
-            self.statusLabel2.setText("{} (Connected)".format(cfg.client))
+            self.statusLabel2.setText("{} ({})".format(cfg.client, lang.ui.connected))
         elif client.status == 2:
-            self.statusLabel2.setText("Invalid credentials")
+            self.statusLabel2.setText(lang.ui.invalid_credentials)
         else:
-            self.statusLabel2.setText("None")
+            self.statusLabel2.setText(lang.ui.none)
 
     # Checks the login status for the Status section
     def checklogin(self, usr):
         if api.login_status == 1:
             self.statusLabel6.clear()
             self.statusLabel6.setText(usr)
-            self.loginBtn.setText("Log Out")
+            self.loginBtn.setText(lang.ui.logout)
         elif api.login_status == 0:
             self.statusLabel6.clear()
-            self.statusLabel6.setText("Not logged in!")
-            self.loginBtn.setText("Log In")
+            self.statusLabel6.setText(lang.ui.not_logged_in)
+            self.loginBtn.setText(lang.ui.login)
             self.loginBtn.clicked.connect(self.login)
 
     # Check for updates
     def update_check(self):
         v = Misc.update_link()
         if v[0] == 1:
-            choice = QMessageBox.question(self, 'GUU', "A new version of GUU is available. Do you want to download it?",
+            choice = QMessageBox.question(self, 'GUU', lang.popups.new_version,
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if choice == QMessageBox.StandardButton.Yes:
                 Misc.openlink(v[1])
@@ -117,14 +163,14 @@ class Main(QMainWindow):
     # Function to select a folder for the path
     def select_folder(self):
         folderpath = QFileDialog.getExistingDirectory(
-            self, "Select Folder", "~")
+            self, lang.ui.select_folder)
         if folderpath:
             self.path.clear()
             self.path.insert(folderpath)
 
     # Function to select a file for the path
     def select_file(self):
-        filepath = QFileDialog.getOpenFileName(self, 'Select File', '~',
+        filepath = QFileDialog.getOpenFileName(self, lang.ui.select_file, '',
                                                "All files (*.*)")
         if filepath:
             self.path.clear()
@@ -132,7 +178,7 @@ class Main(QMainWindow):
 
     # Adds pictures to the list
     def add_pictures(self):
-        filenames = QFileDialog.getOpenFileNames(self, 'Select Image(s)', '~',
+        filenames = QFileDialog.getOpenFileNames(self, lang.file_dialogs.select_images, '',
                                                  "Images (*.png *.jpg *.jpeg *.bmp *.tif *.psd)")
         if filenames:
             for pic in filenames[0]:
@@ -151,7 +197,7 @@ class Main(QMainWindow):
 
     # Resets all inputs
     def wipe(self):
-        choice = QMessageBox.question(self, 'New project', "Are you sure you want to start a new project?",
+        choice = QMessageBox.question(self, 'New project', lang.popups.new_project_confirm,
                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if choice == QMessageBox.StandardButton.Yes:
             self.path.clear()
@@ -201,8 +247,8 @@ class Main(QMainWindow):
 
         if os.path.exists(categ_path):
             print("GUU: Category cache exists")
-            self.categories = ["Select Category"]
-            self.subcategories = ["(Optional)"]
+            self.categories = [lang.ui.select_category]
+            self.subcategories = [lang.ui.optional]
             self.categories_num = [0]
             with open(categ_path, 'r') as f:
                 try:
@@ -210,8 +256,8 @@ class Main(QMainWindow):
                 except JSONDecodeError:
                     os.remove(categ_path)
                     print("GUU: Category cache does not exist")
-                    self.categories = ["Log in to load categories"]
-                    self.subcategories = ["Log in to load categories"]
+                    self.categories = [lang.ui.categories_login_error]
+                    self.subcategories = [lang.ui.categories_login_error]
                     self.categories_num = [0]
                     return
                 else:
@@ -222,8 +268,8 @@ class Main(QMainWindow):
             print("GUU: Loaded categories from cache")
         else:
             print("GUU: Category cache does not exist")
-            self.categories = ["Log in to load categories"]
-            self.subcategories = ["Log in to load categories"]
+            self.categories = [lang.ui.categories_login_error]
+            self.subcategories = [lang.ui.categories_login_error]
             self.categories_num = [0]
 
     # Pulls the category list from the website
@@ -231,8 +277,8 @@ class Main(QMainWindow):
         if api.login_status == 1:
             c = api.fetch_categories()
 
-            self.categories = ["Select Category"]
-            self.subcategories = ["(Optional)"]
+            self.categories = [lang.ui.select_category]
+            self.subcategories = [lang.ui.optional]
             self.categories_num = [0]
 
             for key in c:
@@ -263,7 +309,7 @@ class Main(QMainWindow):
             QMessageBox.warning(
                 self,
                 'GUU',
-                "You must be logged in to download the category list.")
+                lang.popups.categories_fetch_login_error)
 
     # Opens the torrent client's web UI
     def openwebui(self):
@@ -271,12 +317,12 @@ class Main(QMainWindow):
             QMessageBox.warning(
                 self,
                 'GUU',
-                "Cannot communicate with the torrent client. Please make sure it is running and try again.")
+                lang.popups.client_not_running)
         elif client.status == 2:
             QMessageBox.warning(
                 self,
                 'GUU',
-                "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
+                lang.popups.client_wrong_credentials)
         else:
             Misc.openlink("http://" + cfg.webuihost +
                           ':' + cfg.webuiport)
@@ -291,8 +337,9 @@ class Main(QMainWindow):
         self.aboutwin = QWidget()
         loadUi(GUUPATH + '/ui/about.ui', self.aboutwin)
         self.aboutwin.show()
+        self.set_about_lang()
         self.aboutwin.label.setText(
-            '<html><head/><body><p><span style=\" font-size:18pt;\">Gaytor.rent Upload Utility v' + version + '</span></p></body></html>')
+            "<html><head/><body><p><span style=\" font-size:18pt;\">{} v{}</span></p></body></html>".format(lang.about.guu, version))
         self.aboutwin.label_4.linkActivated.connect(lambda: Misc.openlink(
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html"))
         self.aboutwin.label_8.linkActivated.connect(
@@ -306,6 +353,13 @@ class Main(QMainWindow):
         self.aboutwin.label_5.linkActivated.connect(
             lambda: Misc.openlink("https://github.com/5yutan5/PyQtDarkTheme"))
 
+    # Changes all text to this from the language file
+    def set_about_lang(self):
+        self.aboutwin.label_2.setText('<html><head/><body><p><span style=" font-size:12pt;">{}</span></p></body></html>'.format(lang.about.made_by.format("vancer")))
+        self.aboutwin.label_3.setText(lang.about.license)
+        self.aboutwin.label_4.setText('<html><head/><body><p><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html"><span style=" text-decoration: underline; color:#e9643a;">{}</span></a></p></body></html>'.format(lang.about.view_license))
+        self.aboutwin.label_7.setText(lang.about.libraries_used)
+
     #############################
     # SETTINGS WINDOW FUNCTIONS #
     #############################
@@ -316,7 +370,8 @@ class Main(QMainWindow):
         self.setwin = QWidget()
         loadUi(GUUPATH + '/ui/settings.ui', self.setwin)
         self.setwin.show()
-        self.setwin.language.addItems(languages)
+        self.set_settings_lang()
+        self.setwin.language.addItems(languages_full)
         self.setwin.language.setCurrentIndex(languages.index(cfg.language))
         self.setwin.theme.setCurrentIndex(themes.index(cfg.theme))
         self.setwin.autoLogin.setChecked(cfg.savelgn)
@@ -341,10 +396,37 @@ class Main(QMainWindow):
         self.set_enableclient()
         self.set_enabledl()
 
+    # Changes all text to this from the language file
+    def set_settings_lang(self):
+        self.setwin.setWindowTitle("GUU - {}".format(lang.settings.settings))
+
+        self.setwin.groupBox.setTitle(lang.settings.general)
+        self.setwin.languageLabel.setText(lang.settings.language)
+        self.setwin.themeLabel.setText(lang.settings.theme)
+
+        self.setwin.autoLogin.setText(lang.settings.auto_login)
+        self.setwin.gtuserLabel.setText(lang.settings.username)
+        self.setwin.gtpasswdLabel.setText(lang.settings.password)
+        self.setwin.label_2.setText(lang.settings.credentials_warning)
+
+        self.setwin.clientBox.setTitle(lang.settings.client)
+        self.setwin.autoDl.setText(lang.settings.auto_seed)
+        self.setwin.clientLabel.setText(lang.settings.torrent_client)
+        self.setwin.hostLabel.setText(lang.settings.webui_host)
+        self.setwin.portLabel.setText(lang.settings.webui_port)
+        self.setwin.userLabel.setText(lang.settings.webui_username)
+        self.setwin.pwdLabel.setText(lang.settings.webui_password)
+
+        self.setwin.uploadingBox.setTitle(lang.settings.uploading)
+        self.setwin.saveUploads.setText(lang.settings.save_torrents)
+        self.setwin.savePathBrowse.setText(lang.settings.browse)
+
+        self.setwin.saveSetBtn.setText(lang.settings.save)
+
     # Selects the auto save path
     def select_save_folder(self):
         path = QFileDialog.getExistingDirectory(
-            self, "Select Folder")
+            self, lang.ui.select_folder)
         if path:
             self.setwin.savePath.clear()
             self.setwin.savePath.insert(path)
@@ -403,7 +485,7 @@ class Main(QMainWindow):
 
         self.setwin.close()
         QMessageBox.information(
-            self, 'GUU', "Please restart the program for the changes to take effect.")
+            self, 'GUU', lang.popups.restart_required)
 
     #######################
     # UPLOADING FUNCTIONS #
@@ -414,27 +496,27 @@ class Main(QMainWindow):
         self.uploadStatus.setMaximum(0)
         choice = QMessageBox.question(self,
                                       'GUU',
-                                      "Are you sure you want to upload?",
+                                      lang.popups.upload_confirm,
                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if choice == QMessageBox.StandardButton.Yes:
             if cfg.autodl:
                 if client.status == 0:
-                    QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please make sure it is running and try again.")
+                    QMessageBox.warning(self, 'GUU', lang.popups.client_not_running)
                     self.uploadStatus.setMaximum(1)
                 elif client.status == 2:
-                    QMessageBox.warning(self, 'GUU', "Cannot communicate with the torrent client. Please enter the correct credentials and try again.")
+                    QMessageBox.warning(self, 'GUU', lang.popups.client_wrong_credentials)
                     self.uploadStatus.setMaximum(1)
                 else:
                     if api.login_status == 1:
                         self.uploadmanager()
                     else:
-                        QMessageBox.warning(self, 'GUU', "Please log in to Gaytor.rent before uploading.")
+                        QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
                         self.uploadStatus.setMaximum(1)
             else:
                 if api.login_status == 1:
                     self.uploadmanager()
                 else:
-                    QMessageBox.warning(self, 'GUU', "Please log in to Gaytor.rent before uploading.")
+                    QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
                     self.uploadStatus.setMaximum(1)
 
     # Controls the several upload functions according to the user settings
@@ -470,8 +552,6 @@ class Main(QMainWindow):
                              tor_title_var,
                              tor_desc_var)
 
-        print(tor_url)
-
         if cfg.saveupld:
             tor_path = api.download(tor_url)
             try:
@@ -480,10 +560,10 @@ class Main(QMainWindow):
                                          tor_title_var + '.torrent'))
             except shutil.SameFileError:
                 QMessageBox.warning(
-                    self, 'GUU', "Torrent already exists in the download folder.")
+                    self, 'GUU', lang.popups.torrent_dl_already_exists)
             except PermissionError:
                 QMessageBox.warning(
-                    self, 'GUU', "You do not have permission to save the torrent in the selected download folder.")
+                    self, 'GUU', lang.popups.torrent_dl_no_permission)
             else:
                 print("GUU: Torrent saved")
 
@@ -494,7 +574,7 @@ class Main(QMainWindow):
                 client.add_torrent(tor_path, self.dlpath)
                 shutil.rmtree(api.temp_path)
                 self.uploadStatus.setMaximum(1)
-                QMessageBox.information(self, 'GUU', "Upload complete!")
+                QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
             else:
                 self.dlwin = QWidget()
                 loadUi(os.path.join(GUUPATH, "ui", "dlselect.ui"), self.dlwin)
@@ -507,13 +587,19 @@ class Main(QMainWindow):
                     client.add_torrent(tor_path, self.dlpath)
                     shutil.rmtree(api.temp_path)
                     self.uploadStatus.setMaximum(1)
-                    QMessageBox.information(self, 'GUU', "Upload complete!")
+                    QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
                 self.dlwin.okBtn.clicked.connect(get)
                 self.dlwin.remotePath.setText(self.dirpath)
         else:
             shutil.rmtree(api.temp_path)
             self.uploadStatus.setMaximum(1)
-            QMessageBox.information(self, 'GUU', "Upload complete!")
+            QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
+
+    def set_dlselect_lang(self):
+        self.dlwin.setWindowTitle("GUU - {}".format(lang.dlselect.remote_path))
+        self.dlwin.label.setText(lang.dlselect.remote_pc_info_1)
+        self.dlwin.label_2.setText(lang.dlselect.remote_pc_info_2)
+        self.dlwin.label_3.setText(lang.dlselect.remote_pc_info_3)
 
     ###################
     # LOGIN FUNCTIONS #
@@ -525,11 +611,20 @@ class Main(QMainWindow):
             self.logwin = QWidget()
             loadUi(os.path.join(GUUPATH, "ui," "login.ui"), self.logwin)
             self.logwin.show()
+            self.set_login_lang()
             self.logwin.logwinBtn.clicked.connect(self.sendlogin)
             self.logwin.logwinBtn.setShortcut("Return")
         elif api.login_status == 1:
             api.logout()
             self.checklogin('')
+
+    def set_login_lang(self):
+        self.logwin.setWindowTitle("GUU - {}".format(lang.login.login))
+        self.logwin.label.setText(lang.login.enter_credentials)
+        self.logwin.usrLabel.setText(lang.settings.username)
+        self.logwin.pwdLabel.setText(lang.settings.password)
+        self.logwin.credSave.setText(lang.login.remember_credentials)
+        self.logwin.logwinBtn.setText(lang.ui.login)
 
     # Sends login credentials to the website for authentication
     def sendlogin(self):
@@ -548,7 +643,7 @@ class Main(QMainWindow):
             self.logwin.close()
             self.checklogin(usr)
         else:
-            QMessageBox.warning(self, 'GUU', "Login failed!")
+            QMessageBox.warning(self, 'GUU', lang.popups.login_failed)
 
     ######################
     # PROJECTS FUNCTIONS #
@@ -556,7 +651,7 @@ class Main(QMainWindow):
 
     # Clears input widgets and loads the selected project file
     def openproj(self):
-        filename = QFileDialog.getOpenFileName(self, 'Open Project', '~',
+        filename = QFileDialog.getOpenFileName(self, lang.file_dialogs.open_project, '',
                                                "GUU Files (*.guu)")
         if filename == ('', ''):
             return
@@ -584,7 +679,7 @@ class Main(QMainWindow):
                 self.tmp = self.tmp + 1
                 self.picTable.addItem(pic)
             except FileNotFoundError:
-                QMessageBox.warning(self, 'GUU', pic + " was not found.")
+                QMessageBox.warning(self, 'GUU', pic + " {}.".format(lang.popups.was_not_found))
         print("GUU: Loaded project OK.")
 
     # Saves all input values to a project file
@@ -606,7 +701,7 @@ class Main(QMainWindow):
             piclist.insert(piccount, value)
             piccount = piccount - 1
 
-        saveas = QFileDialog.getSaveFileName(self, 'Save File', 'Untitled.guu',
+        saveas = QFileDialog.getSaveFileName(self, lang.file_dialogs.save_file, 'Untitled.guu',
                                              "GUU Files (*.guu)")
 
         if saveas is None:
@@ -641,9 +736,9 @@ if __name__ == '__main__':
     else:
         GUUPATH = os.path.dirname(os.path.abspath(__file__))
 
-    GT_STATUS = 0
-
     cfg = Settings()
+
+    lang = Language(cfg.language, GUUPATH)
 
     client = Misc.select_client(cfg)
 

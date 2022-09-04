@@ -112,11 +112,6 @@ class Settings:
 
     # Converts the config from previous formats to work on the latest version
     def compatibility(self):
-        if self.language == "en":
-            self.config.set("GENERAL", "Language", "English")
-            with open(self.config_path, 'w') as config_file:
-                self.config.write(config_file)
-            print("GUU: Config converted")
         if self.client == "qbittorrent":
             self.config.set("CLIENT", "client", "qBitTorrent")
             with open(self.config_path, 'w') as config_file:

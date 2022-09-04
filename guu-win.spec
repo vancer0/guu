@@ -8,7 +8,7 @@ a = Analysis(
     ['src/main.py'],
     pathex=[],
     binaries=[],
-    datas=[('src/ui/*', 'ui/'), ('src/icon/guu.png', 'icon'), ('C:/Program Files/OpenSSL-Win64/bin/libssl-1_1-x64.dll', '.'), ('C:/Program Files/OpenSSL-Win64/bin/libcrypto-1_1-x64.dll', '.')],
+    datas=[('src/ui/*', 'ui/'), ('src/languages/*', 'languages/'), ('src/icon/guu.png', 'icon'), ('C:/Program Files/OpenSSL-Win64/bin/libssl-1_1-x64.dll', '.'), ('C:/Program Files/OpenSSL-Win64/bin/libcrypto-1_1-x64.dll', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

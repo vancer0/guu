@@ -13,6 +13,7 @@ cp appimage/io.github.vancer0.guu.desktop squashfs-root/usr/share/applications/i
 mkdir squashfs-root/src
 cp src/*.py squashfs-root/src
 cp -r src/ui squashfs-root/src/ui
+cp -r src/languages squashfs-root/src/languages
 mkdir squashfs-root/src/icon
 cp src/icon/guu.png squashfs-root/src/icon/guu.png
 
