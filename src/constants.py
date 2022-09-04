@@ -12,7 +12,7 @@ themes = ["system", "dark", "light"]
 torrent_clients = ["qBitTorrent"]
 
 # Default values for the config
-config_defaults = {"GENERAL": {"Language": "English",
+config_defaults = {"GENERAL": {"Language": "en",
                                "Theme": "system"},
                    "GAYTORRENT": {"SaveLogin": "0",
                                   "GT_Username": "",
