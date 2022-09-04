@@ -10,7 +10,7 @@ import qdarktheme
 
 from settings import Settings
 from misc import Misc
-from constants import version, themes, torrent_clients, languages, languages_full
+from constants import version, themes, torrent_clients
 from api import GayTorrent
 from language import Language
 
@@ -729,29 +729,26 @@ class Main(QMainWindow):
 
 
 if __name__ == '__main__':
-    api = GayTorrent()
-
     if getattr(sys, 'frozen', False):
         GUUPATH = sys._MEIPASS
     else:
         GUUPATH = os.path.dirname(os.path.abspath(__file__))
-
     cfg = Settings()
-
-    lang = Language(cfg.language, GUUPATH)
-
+    api = GayTorrent()
+    languages, languages_full = Misc.fetch_lang_packs(os.path.join(cfg.data_path, "languages"))
+    if languages == []:
+        from constants import languages, languages_full
+        lang = Language(cfg.language, os.path.join(GUUPATH, "languages"))
+    else:
+        lang = Language(cfg.language, os.path.join(cfg.data_path, "languages"))
     client = Misc.select_client(cfg)
-
     app = QApplication(sys.argv)
     win = Main()
-
     if cfg.theme == "system":
         app.setStyleSheet("")
     elif cfg.theme == "dark":
         app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
     elif cfg.theme == "light":
         app.setStyleSheet(qdarktheme.load_stylesheet("light"))
-
     win.show()
-
     sys.exit(app.exec())

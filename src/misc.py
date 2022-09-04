@@ -2,7 +2,10 @@ from webbrowser import open_new_tab
 import libtorrent as lt
 import json
 import requests
+from requests import Timeout, ConnectionError
 import sys
+import os
+import shutil
 
 from constants import version
 from clients import QBitTorrent
@@ -63,3 +66,69 @@ class Misc:
     def select_client(cfg):
         # if cfg.client == "qBitTorrent":
         return QBitTorrent(cfg)
+
+    # Downloads all available language packs to cache
+    def fetch_lang_packs(folder):
+        try:
+            remote = requests.get("https://vancer0.github.io/guu/languages.json",
+                                  stream=True,
+                                  timeout=3)
+        except (Timeout, ConnectionError):
+            print("GUU: Failed to download language packs")
+            return Misc.use_offline_lang_packs(folder)
+        else:
+            data = json.loads(remote.text)
+
+        lang = []
+
+        for language in data:
+            lang.append(data[language])
+
+        try:
+            os.mkdir(folder)
+        except FileExistsError:
+            pass
+
+        for language in lang:
+            url = "https://vancer0.github.io/guu/languages/{}.json".format(language)
+            try:
+                remote = requests.get(url,
+                                      stream=True,
+                                      timeout=3)
+            except (Timeout, ConnectionError):
+                print("GUU: Failed to download language: {}".format(language))
+                break
+            else:
+                lang_data = remote.text
+
+            path = os.path.join(folder, "{}.json".format(language))
+            if os.path.exists(path):
+                os.remove(path)
+            with open(path, "w") as f:
+                f.write(lang_data)
+                f.close()
+            print("GUU: Downloaded language: {}".format(language))
+
+        return Misc.use_offline_lang_packs(folder)
+
+    def use_offline_lang_packs(folder):
+        if not os.path.exists(folder):
+            return [], []
+        else:
+            file_list = []
+            for filename in os.listdir(folder):
+                f = os.path.join(folder, filename)
+                if os.path.isfile(f):
+                    if f[-4:] == "json":
+                        file_list.append(f)
+
+            lang = []
+            lang_full = []
+
+            for filename in file_list:
+                f = json.load(open(filename, 'r'))
+
+                lang.append(os.path.basename(filename)[:-5])
+                lang_full.append(f["language"])
+
+            return lang, lang_full
