@@ -1,1 +1,1 @@
-{{ python-executable }} ${APPDIR}/src/guu.py "$@"
+{{ python-executable }} ${APPDIR}/src/main.py "$@"

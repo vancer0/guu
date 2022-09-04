@@ -11,7 +11,7 @@ cp appimage/io.github.vancer0.guu.desktop squashfs-root/usr/share/applications/i
 
 # Copy GUU files
 mkdir squashfs-root/src
-cp src/guu.py squashfs-root/src/guu.py
+cp src/*.py squashfs-root/src
 cp -r src/ui squashfs-root/src/ui
 mkdir squashfs-root/src/icon
 cp src/icon/guu.png squashfs-root/src/icon/guu.png
@@ -20,9 +20,6 @@ cp src/icon/guu.png squashfs-root/src/icon/guu.png
 export VERSION=1
 export ARCH=x86_64 appimagetool
 chmod -R 755 squashfs-root
-# wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-# chmod +x linuxdeploy-x86_64.AppImage
-# ./linuxdeploy-x86_64.AppImage --appdir squashfs-root
 wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
 chmod +x appimagetool-*.AppImage
 ./appimagetool-*-x86_64.AppImage squashfs-root/
