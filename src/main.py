@@ -1,6 +1,7 @@
 from PyQt6.uic import loadUi
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QWidget, QApplication, QGroupBox, QLabel, QComboBox, QSplitter, QPushButton, QLineEdit, QPlainTextEdit, QProgressBar, QListWidget, QMenuBar, QMenu
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QWidget, QApplication, QGroupBox, QLabel, QComboBox, QSplitter, QPushButton, QLineEdit, QPlainTextEdit, QProgressBar, QMenuBar, QMenu
+from PyQt6.QtCore import QSize
 import sys
 import shutil
 import os
@@ -13,12 +14,16 @@ from misc import Misc
 from constants import version, themes, torrent_clients
 from api import GayTorrent
 from language import Language
+from qt_classes import GUUClasses
 
 
 class Main(QMainWindow):
     def __init__(self):
         global GUUPATH
         super(Main, self).__init__()
+
+        sys.modules['GUUClasses'] = GUUClasses
+
         loadUi(os.path.join(GUUPATH, "ui", "gui.ui"), self)
         print("GUU: Drawing window")
 
@@ -45,8 +50,8 @@ class Main(QMainWindow):
         self.subcategory3.addItems(self.subcategories)
         self.subcategory4.addItems(self.subcategories)
 
-        self.picn = 0
-        self.addPicBtn.clicked.connect(self.add_pictures)
+        self.picTable.setIconSize(QSize(150, 150))
+        self.addPicBtn.clicked.connect(self.select_pictures)
         self.rmPicBtn.clicked.connect(self.remove_pictures)
 
         self.uploadBtn.clicked.connect(self.uplchecks)
@@ -176,17 +181,14 @@ class Main(QMainWindow):
             self.path.clear()
             self.path.insert(filepath[0])
 
-    # Adds pictures to the list
-    def add_pictures(self):
-        filenames = QFileDialog.getOpenFileNames(self, lang.file_dialogs.select_images, '',
+    # File dialog to select pictures
+    def select_pictures(self):
+        filenames = QFileDialog.getOpenFileNames(self,
+                                                 lang.file_dialogs.select_images,
+                                                 '',
                                                  "Images (*.png *.jpg *.jpeg *.bmp *.tif *.psd)")
         if filenames:
-            for pic in filenames[0]:
-                self.picn = self.picn + 1
-                # filesize = os.path.getsize(pic)
-                # filesize_e = str(round((filesize / 1000000), 2)) + " MB"
-                # self.model.appendRow([QStandardItem(str(self.picn)), QStandardItem(pic), QStandardItem(filesize_e)])
-                self.picTable.addItem(pic)
+            self.picTable.add_pictures(filenames[0])
 
     # Removes selected pictures from the list
     def remove_pictures(self):
@@ -674,13 +676,7 @@ class Main(QMainWindow):
         self.description.clear()
         self.description.insertPlainText(data["Info"]["Description"])
         self.picTable.clear()
-        self.tmp = 0
-        for pic in data["Pictures"]["Path(s)"]:
-            try:
-                self.tmp = self.tmp + 1
-                self.picTable.addItem(pic)
-            except FileNotFoundError:
-                QMessageBox.warning(self, 'GUU', pic + " {}.".format(lang.popups.was_not_found))
+        self.picTable.add_pictures(data["Pictures"]["Path(s)"])
         print("GUU: Loaded project OK.")
 
     # Saves all input values to a project file
