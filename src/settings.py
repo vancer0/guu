@@ -12,8 +12,9 @@ class Settings:
         self.config_path = os.path.join(self.data_path, "config")
         self.config = RawConfigParser()
 
-        self.load_config()
+        self.config.read(self.config_path)
         self.generate()
+        self.load_config()
 
         self.compatibility()
 
@@ -42,8 +43,6 @@ class Settings:
 
     # Loads the config
     def load_config(self):
-        self.config.read(self.config_path)
-
         self.language = self.config['GENERAL']['Language']
         self.theme = self.config['GENERAL']['Theme']
         self.savelgn = bool(int(self.config['GAYTORRENT']['SaveLogin']))
@@ -67,7 +66,9 @@ class Settings:
                 self.config.add_section(section)
             for option in config_defaults[section]:
                 if option not in self.config[section]:
-                    self.config.set(section, option, config_defaults[section][option])
+                    self.config.set(section,
+                                    option,
+                                    config_defaults[section][option])
 
         with open(self.config_path, 'w') as config_file:
             self.config.write(config_file)
