@@ -4,6 +4,7 @@ import shutil
 import sys
 from requests import Timeout, ConnectionError
 from bs4 import BeautifulSoup
+import jwt
 
 from misc import Misc
 
@@ -191,3 +192,9 @@ class GayTorrent:
         else:
             print("API: Downloaded torrent OK.")
             return dest
+
+    # Gets the username
+    def get_username(self):
+        token = self.session.cookies.get_dict()["token"]
+        token_dec = jwt.decode(token, "secret", algorithms=["HS256"], options={'verify_signature': False})
+        self.username = token_dec["username"]

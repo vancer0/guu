@@ -147,7 +147,8 @@ class Main(QMainWindow):
         self.addPicBtn.clicked.connect(self.select_pictures)
         self.rmPicBtn.clicked.connect(self.remove_pictures)
 
-        self.uploadBtn.clicked.connect(self.uplchecks)
+        # self.uploadBtn.clicked.connect(self.uplchecks)
+        self.uploadBtn.clicked.connect(api.get_username)
 
         self.loginBtn.clicked.connect(self.login)
 
@@ -211,7 +212,7 @@ class Main(QMainWindow):
         api.check_server_status()
         if api.server_status == 0:
             self.statusLabel4.setText(lang.ui.unreachable)
-            self.checklogin('')
+            self.checklogin()
         else:
             self.statusLabel4.setText(lang.ui.online)
 
@@ -221,13 +222,13 @@ class Main(QMainWindow):
 
                 if api.login_status == 1:
                     print("GUU: Auto login OK")
-                    self.checklogin(cfg.gtusr)
+                    self.checklogin()
                     self.categ_reload()
                 else:
                     print("GUU: Auto login failed")
-                    self.checklogin('')
+                    self.checklogin()
             else:
-                self.checklogin('')
+                self.checklogin()
 
         if client.status == 1:
             self.statusLabel2.setText("{} ({})".format(cfg.client,
@@ -238,10 +239,10 @@ class Main(QMainWindow):
             self.statusLabel2.setText(lang.ui.none)
 
     # Checks the login status for the Status section
-    def checklogin(self, usr):
+    def checklogin(self):
         if api.login_status == 1:
             self.statusLabel6.clear()
-            self.statusLabel6.setText(usr)
+            self.statusLabel6.setText(api.username)
             self.loginBtn.setText(lang.ui.logout)
         elif api.login_status == 0:
             self.statusLabel6.clear()
@@ -704,7 +705,7 @@ class Main(QMainWindow):
             self.logwin.logwinBtn.setShortcut("Return")
         elif api.login_status == 1:
             api.logout()
-            self.checklogin('')
+            self.checklogin()
 
     def set_login_lang(self):
         self.logwin.setWindowTitle("GUU - {}".format(lang.login.login))
@@ -729,7 +730,7 @@ class Main(QMainWindow):
                 cfg.login_save(savelgn, usr, pwd)
             self.categ_reload()
             self.logwin.close()
-            self.checklogin(usr)
+            self.checklogin()
         else:
             QMessageBox.warning(self, 'GUU', lang.popups.login_failed)
 
