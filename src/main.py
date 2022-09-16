@@ -136,7 +136,8 @@ class Main(QMainWindow):
                 self.checklogin('')
 
         if client.status == 1:
-            self.statusLabel2.setText("{} ({})".format(cfg.client, lang.ui.connected))
+            self.statusLabel2.setText("{} ({})".format(cfg.client,
+                                                       lang.ui.connected))
         elif client.status == 2:
             self.statusLabel2.setText(lang.ui.invalid_credentials)
         else:
@@ -436,7 +437,8 @@ class Main(QMainWindow):
             self.setwin.savePath.clear()
             self.setwin.savePath.insert(path)
 
-    # Enables or disables the client input widgets based on whether auto seeding is enabled or not
+    # Enables or disables the client input widgets based on
+    # whether auto seeding is enabled or not
     def set_enableclient(self):
         if self.setwin.autoDl.isChecked():
             self.setwin.torrentClient.setEnabled(True)
@@ -451,7 +453,8 @@ class Main(QMainWindow):
             self.setwin.webuiUser.setEnabled(False)
             self.setwin.webuiPwd.setEnabled(False)
 
-    # Enables or disables the gaytor.rent input widgets based on whether saving credentials is enabled or not
+    # Enables or disables the gaytor.rent input widgets based on
+    # whether saving credentials is enabled or not
     def set_enablegt(self):
         if self.setwin.autoLogin.isChecked():
             self.setwin.gtUsername.setEnabled(True)
@@ -460,7 +463,8 @@ class Main(QMainWindow):
             self.setwin.gtUsername.setEnabled(False)
             self.setwin.gtPassword.setEnabled(False)
 
-    # Enables or disables the download widgets based on whether it is enabled or not
+    # Enables or disables the download widgets based on
+    # whether it is enabled or not
     def set_enabledl(self):
         if self.setwin.saveUploads.isChecked():
             self.setwin.savePath.setEnabled(True)
@@ -470,27 +474,53 @@ class Main(QMainWindow):
             self.setwin.savePathBrowse.setEnabled(False)
 
     # Sends all the input values to the settings class to be saved
+    # and reloads the config
     def save_settings(self):
-        language = languages[self.setwin.language.currentIndex()]
-        theme = themes[self.setwin.theme.currentIndex()]
-        savelgn = int(self.setwin.autoLogin.isChecked())
-        gtusr = self.setwin.gtUsername.text()
-        gtpwd = self.setwin.gtPassword.text()
-        autodl = int(self.setwin.autoDl.isChecked())
-        client = torrent_clients[self.setwin.torrentClient.currentIndex()]
-        webuihost = self.setwin.webuiHost.text()
-        webuiport = self.setwin.webuiPort.text()
-        webuiusr = self.setwin.webuiUser.text()
-        webuipwd = self.setwin.webuiPwd.text()
-        saveupld = int(self.setwin.saveUploads.isChecked())
-        savepath = self.setwin.savePath.text()
+        global client, languages, languages_full, lang
 
-        cfg.save(language, theme, savelgn, gtusr, gtpwd, autodl, client,
-                 webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath)
+        set_language = languages[self.setwin.language.currentIndex()]
+        set_theme = themes[self.setwin.theme.currentIndex()]
+        set_savelgn = int(self.setwin.autoLogin.isChecked())
+        set_gtusr = self.setwin.gtUsername.text()
+        set_gtpwd = self.setwin.gtPassword.text()
+        set_autodl = int(self.setwin.autoDl.isChecked())
+        set_client = torrent_clients[self.setwin.torrentClient.currentIndex()]
+        set_webuihost = self.setwin.webuiHost.text()
+        set_webuiport = self.setwin.webuiPort.text()
+        set_webuiusr = self.setwin.webuiUser.text()
+        set_webuipwd = self.setwin.webuiPwd.text()
+        set_saveupld = int(self.setwin.saveUploads.isChecked())
+        set_savepath = self.setwin.savePath.text()
+
+        cfg.save(set_language, set_theme, set_savelgn, set_gtusr, set_gtpwd,
+                 set_autodl, set_client, set_webuiport, set_webuihost,
+                 set_webuiusr, set_webuipwd, set_saveupld, set_savepath)
+
+        cfg.load_config()
+        if cfg.autodl:
+            client = Misc.select_client(cfg)
+        else:
+            client.logout()
+        self.set_lang()
+        self.load_categs()
+        self.checks()
+        languages, languages_full = Misc.fetch_lang_packs(
+            os.path.join(cfg.data_path, "languages"))
+        if languages == []:
+            from constants import languages, languages_full
+            lang = Language(cfg.language,
+                            os.path.join(GUUPATH, "languages"))
+        else:
+            lang = Language(cfg.language,
+                            os.path.join(cfg.data_path, "languages"))
+        if cfg.theme == "system":
+            app.setStyleSheet("")
+        elif cfg.theme == "dark":
+            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+        elif cfg.theme == "light":
+            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
 
         self.setwin.close()
-        QMessageBox.information(
-            self, 'GUU', lang.popups.restart_required)
 
     #######################
     # UPLOADING FUNCTIONS #
@@ -756,7 +786,8 @@ if __name__ == '__main__':
         win.show()
         sys.exit(app.exec())
     except:
-        app = QApplication(sys.argv)
-        crash = CrashWindow(GUUPATH, traceback.format_exc())
-        crash.show()
-        sys.exit(app.exec())
+        if "SystemExit" not in str(sys.exc_info()[0]):
+            appc = QApplication(sys.argv)
+            crash = CrashWindow(GUUPATH, traceback.format_exc())
+            crash.show()
+            sys.exit(appc.exec())

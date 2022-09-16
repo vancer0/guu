@@ -117,7 +117,6 @@ class Popups():
         self.categories_fetch_login_error = f["popups"]["categories_fetch_login_error"]
         self.client_not_running = f["popups"]["client_not_running"]
         self.client_wrong_credentials = f["popups"]["client_wrong_credentials"]
-        self.restart_required = f["popups"]["restart_required"]
         self.upload_confirm = f["popups"]["upload_confirm"]
         self.upload_login_error = f["popups"]["upload_login_error"]
         self.torrent_dl_already_exists = f["popups"]["torrent_dl_already_exists"]

@@ -91,7 +91,6 @@
         "categories_fetch_login_error": "You must be logged in to download the category list.",
         "client_not_running": "Cannot communicate with the torrent client. Please make sure it is running and try again.",
         "client_wrong_credentials": "Cannot communicate with the torrent client. Please enter the correct credentials and try again.",
-        "restart_required": "Please restart the program for the changes to take effect.",
         "upload_confirm": "Are you sure you want to upload?",
         "upload_login_error": "Please log in to Gaytor.rent before uploading.",
         "torrent_dl_already_exists": "Torrent already exists in the download folder.",

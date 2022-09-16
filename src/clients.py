@@ -13,19 +13,22 @@ class QBitTorrent:
             self.status = 0
         else:
             print("CLT: QBitTorrent WebUI found.")
-            try:
-                self.client = QBitClient(
-                    host=cfg.webuihost,
-                    port=cfg.webuiport,
-                    username=cfg.webuiusr,
-                    password=cfg.webuipwd)
-                self.client.auth_log_in()
-            except Exception:
-                print("CLT: Wrong QBitTorrent WebUI credentials.")
-                self.status = 2
+            if cfg.autodl:
+                try:
+                    self.client = QBitClient(
+                        host=cfg.webuihost,
+                        port=cfg.webuiport,
+                        username=cfg.webuiusr,
+                        password=cfg.webuipwd)
+                    self.client.auth_log_in()
+                except:
+                    print("CLT: Wrong QBitTorrent WebUI credentials.")
+                    self.status = 2
+                else:
+                    print("CLT: Connection with QBitTorrent OK.")
+                    self.status = 1
             else:
-                print("CLT: Connection with QBitTorrent OK.")
-                self.status = 1
+                self.status = 0
 
     def add_torrent(self, path, dlpath):
         self.client.torrents_add(
