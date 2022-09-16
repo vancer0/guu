@@ -14,6 +14,7 @@ class GayTorrent:
         self.session = requests.Session()
         self.login_status = 0
         self.server_status = 0
+        self.username = ""
         self.get_temp_path()
 
     def get_temp_path(self):

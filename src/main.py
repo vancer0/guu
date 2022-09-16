@@ -147,8 +147,7 @@ class Main(QMainWindow):
         self.addPicBtn.clicked.connect(self.select_pictures)
         self.rmPicBtn.clicked.connect(self.remove_pictures)
 
-        # self.uploadBtn.clicked.connect(self.uplchecks)
-        self.uploadBtn.clicked.connect(api.get_username)
+        self.uploadBtn.clicked.connect(self.uplchecks)
 
         self.loginBtn.clicked.connect(self.login)
 
@@ -830,8 +829,8 @@ def close_all_windows():
         win.logwin.close()
 
 
-if __name__ == '__main__':
-    try:
+try:
+    if __name__ == '__main__':
         if getattr(sys, 'frozen', False):
             GUUPATH = sys._MEIPASS
         else:
@@ -858,5 +857,5 @@ if __name__ == '__main__':
         win = Main()
         win.show()
         sys.exit(app.exec())
-    except:
-        crash_report()
+except:
+    crash_report()
