@@ -6,8 +6,6 @@ from requests import Timeout, ConnectionError
 from bs4 import BeautifulSoup
 import jwt
 
-from misc import Misc
-
 
 class GayTorrent:
     def __init__(self):
@@ -56,13 +54,14 @@ class GayTorrent:
 
     # Sends the provided username and password to the
     # server for authentication.
-    def send_login_data(self, username, password):
+    def login(self, username, password):
         login_data = {'username': username, 'password': password}
         try:
             self.session.post("https://www.gaytor.rent/takelogin.php",
                               params=login_data, timeout=3)
         except(Timeout, ConnectionError):
             print("API: Failed to connect to server")
+        self.get_username()
 
     # Checks whether the user is logged in or not and changes
     # the login_status variable accordingly

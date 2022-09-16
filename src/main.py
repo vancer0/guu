@@ -216,7 +216,7 @@ class Main(QMainWindow):
             self.statusLabel4.setText(lang.ui.online)
 
             if cfg.savelgn:
-                api.send_login_data(cfg.gtusr, cfg.gtpwd)
+                api.login(cfg.gtusr, cfg.gtpwd)
                 api.check_login_status()
 
                 if api.login_status == 1:
@@ -719,7 +719,7 @@ class Main(QMainWindow):
         usr = self.logwin.username.text()
         pwd = self.logwin.password.text()
 
-        api.send_login_data(usr, pwd)
+        api.login(usr, pwd)
 
         api.check_login_status()
 
