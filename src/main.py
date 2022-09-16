@@ -1,7 +1,7 @@
 from PyQt6.uic import loadUi
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QWidget, QApplication, QGroupBox, QLabel, QComboBox, QSplitter, QPushButton, QLineEdit, QPlainTextEdit, QProgressBar, QMenuBar, QMenu
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, QObject, pyqtSignal, QThread
 import sys
 import shutil
 import os
@@ -16,7 +16,79 @@ from constants import version, themes, torrent_clients
 from api import GayTorrent
 from language import Language
 from qt_classes import GUUClasses
-from crash_window import CrashWindow
+
+
+class UploadManager(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(str)
+
+    # Controls the several upload functions according to the user settings
+    def run(self, path, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title_var, tor_desc_var):
+        global GUUPATH
+        # Try to create the cache folder
+        try:
+            os.mkdir(api.temp_path)
+        except Exception:
+            shutil.rmtree(api.temp_path)
+            os.mkdir(api.temp_path)
+
+        self.progress.emit("Creating torrent...")
+        dest = os.path.join(api.temp_path, "upl.torrent")
+        Misc.create_torrent(path, dirpath, dest)
+
+        self.progress.emit("Uploading torrent...")
+        tor_url = api.upload(dest,
+                            piclist,
+                            mc,
+                            sc1,
+                            sc2,
+                            sc3,
+                            sc4,
+                            tor_title_var,
+                            tor_desc_var)
+
+        if cfg.saveupld:
+            tor_path = api.download(tor_url)
+            self.progress.emit("Saving torrent...")
+            try:
+                shutil.copy(tor_path,
+                            os.path.join(os.path.dirname(cfg.savepath + '/'),
+                                        tor_title_var + '.torrent'))
+            except shutil.SameFileError:
+                QMessageBox.warning(
+                    self, 'GUU', lang.popups.torrent_dl_already_exists)
+            except PermissionError:
+                QMessageBox.warning(
+                    self, 'GUU', lang.popups.torrent_dl_no_permission)
+            else:
+                print("GUU: Torrent saved")
+
+        if cfg.autodl:
+            self.progress.emit("Adding torrent to client...")
+            if cfg.webuihost == "localhost" or cfg.webuihost == "127.0.0.1":
+                self.dlpath = dirpath
+                tor_path = api.download(tor_url)
+                client.add_torrent(tor_path, self.dlpath)
+                shutil.rmtree(api.temp_path)
+                self.finished.emit()
+            else:
+                win.dlwin.show()
+
+                def get():
+                    self.dlpath = win.dlwin.remotePath.text()
+                    win.dlwin.close()
+                    tor_path = api.download(tor_url)
+                    try:
+                        client.add_torrent(tor_path, self.dlpath)
+                    except:
+                        crash_report()
+                    shutil.rmtree(api.temp_path)
+                    self.finished.emit()
+                win.dlwin.okBtn.clicked.connect(get)
+                win.dlwin.remotePath.setText(dirpath)
+        else:
+            shutil.rmtree(api.temp_path)
+            self.finished.emit()
 
 
 class Main(QMainWindow):
@@ -26,8 +98,27 @@ class Main(QMainWindow):
 
         sys.modules['GUUClasses'] = GUUClasses
 
-        loadUi(os.path.join(GUUPATH, "ui", "gui.ui"), self)
         print("GUU: Drawing window")
+        loadUi(os.path.join(GUUPATH, "ui", "gui.ui"), self)
+
+        print("GUU: Loading widgets")
+        self.logwin = QWidget()
+        loadUi(os.path.join(GUUPATH, "ui", "login.ui"), self.logwin)
+
+        self.dlwin = QWidget()
+        loadUi(os.path.join(GUUPATH, "ui", "dlselect.ui"), self.dlwin)
+
+        self.aboutwin = QWidget()
+        loadUi(GUUPATH + '/ui/about.ui', self.aboutwin)
+
+        self.setwin = QWidget()
+        loadUi(GUUPATH + '/ui/settings.ui', self.setwin)
+
+        self.uplwin = QWidget()
+        loadUi(os.path.join(GUUPATH, "ui", "upload.ui"), self.uplwin)
+
+        self.crashwin = QWidget()
+        loadUi(os.path.join(GUUPATH, "ui", "crash.ui"), self.crashwin)
 
         self.set_lang()
 
@@ -63,6 +154,9 @@ class Main(QMainWindow):
         self.checks()
 
         self.update_check()
+
+    def closeEvent(self, event):
+        close_all_windows()
 
     #################
     # GUI FUNCTIONS #
@@ -340,8 +434,6 @@ class Main(QMainWindow):
     # Opens about window
     def open_about(self):
         global GUUPATH
-        self.aboutwin = QWidget()
-        loadUi(GUUPATH + '/ui/about.ui', self.aboutwin)
         self.aboutwin.show()
         self.set_about_lang()
         self.aboutwin.label.setText(
@@ -373,8 +465,6 @@ class Main(QMainWindow):
     # Opens settings window
     def open_settings(self):
         global GUUPATH
-        self.setwin = QWidget()
-        loadUi(GUUPATH + '/ui/settings.ui', self.setwin)
         self.setwin.show()
         self.set_settings_lang()
         self.setwin.language.addItems(languages_full)
@@ -543,7 +633,7 @@ class Main(QMainWindow):
                     self.uploadStatus.setMaximum(1)
                 else:
                     if api.login_status == 1:
-                        self.uploadmanager()
+                        self.upload()
                     else:
                         QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
                         self.uploadStatus.setMaximum(1)
@@ -554,8 +644,8 @@ class Main(QMainWindow):
                     QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
                     self.uploadStatus.setMaximum(1)
 
-    # Controls the several upload functions according to the user settings
-    def uploadmanager(self):
+    # Calls the upload functions on a separate thread
+    def upload(self):
         global GUUPATH
 
         mc = self.categories_num[self.category.currentIndex()]
@@ -576,59 +666,24 @@ class Main(QMainWindow):
             piclist.insert(piccount, value)
             piccount = piccount - 1
 
-        tor_url = api.upload(path_var,
-                             dirpath,
-                             piclist,
-                             mc,
-                             sc1,
-                             sc2,
-                             sc3,
-                             sc4,
-                             tor_title_var,
-                             tor_desc_var)
+        self.uplwin.show()
 
-        if cfg.saveupld:
-            tor_path = api.download(tor_url)
-            try:
-                shutil.copy(tor_path,
-                            os.path.join(os.path.dirname(cfg.savepath + '/'),
-                                         tor_title_var + '.torrent'))
-            except shutil.SameFileError:
-                QMessageBox.warning(
-                    self, 'GUU', lang.popups.torrent_dl_already_exists)
-            except PermissionError:
-                QMessageBox.warning(
-                    self, 'GUU', lang.popups.torrent_dl_no_permission)
-            else:
-                print("GUU: Torrent saved")
+        self.thread = QThread()
+        self.worker = UploadManager()
+        self.worker.moveToThread(self.thread)
 
-        if cfg.autodl:
-            if cfg.webuihost == "localhost" or cfg.webuihost == "127.0.0.1":
-                self.dlpath = self.dirpath
-                tor_path = api.download(tor_url)
-                client.add_torrent(tor_path, self.dlpath)
-                shutil.rmtree(api.temp_path)
-                self.uploadStatus.setMaximum(1)
-                QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
-            else:
-                self.dlwin = QWidget()
-                loadUi(os.path.join(GUUPATH, "ui", "dlselect.ui"), self.dlwin)
-                self.dlwin.show()
+        self.thread.started.connect(lambda: self.worker.run(path_var, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title_var, tor_desc_var))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.thread.finished.connect(lambda: self.uploadStatus.setMaximum(1))
+        self.thread.finished.connect(lambda: self.uplwin.close())
+        self.worker.progress.connect(self.upload_report_progress)
+        self.thread.finished.connect(lambda: QMessageBox.information(self, 'GUU', lang.popups.upload_complete))
+        self.thread.start()
 
-                def get():
-                    self.dlpath = self.dlwin.remotePath.text()
-                    self.dlwin.close()
-                    tor_path = api.download(tor_url)
-                    client.add_torrent(tor_path, self.dlpath)
-                    shutil.rmtree(api.temp_path)
-                    self.uploadStatus.setMaximum(1)
-                    QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
-                self.dlwin.okBtn.clicked.connect(get)
-                self.dlwin.remotePath.setText(self.dirpath)
-        else:
-            shutil.rmtree(api.temp_path)
-            self.uploadStatus.setMaximum(1)
-            QMessageBox.information(self, 'GUU', lang.popups.upload_complete)
+    def upload_report_progress(self, text):
+        self.uplwin.status.setText(text)
 
     def set_dlselect_lang(self):
         self.dlwin.setWindowTitle("GUU - {}".format(lang.dlselect.remote_path))
@@ -643,8 +698,6 @@ class Main(QMainWindow):
     # Opens login window if user is not logged in, logs out if user is logged in.
     def login(self):
         if api.login_status == 0:
-            self.logwin = QWidget()
-            loadUi(os.path.join(GUUPATH, "ui", "login.ui"), self.logwin)
             self.logwin.show()
             self.set_login_lang()
             self.logwin.logwinBtn.clicked.connect(self.sendlogin)
@@ -757,6 +810,25 @@ class Main(QMainWindow):
             print("GUU: Saved project OK.")
 
 
+def crash_report():
+    if "SystemExit" not in str(sys.exc_info()[0]):
+        close_all_windows()
+        win.crashwin.show()
+        win.crashwin.output.insertPlainText(traceback.format_exc())
+
+
+def close_all_windows():
+    win.close()
+    if win.uplwin:
+        win.uplwin.close()
+    if win.setwin:
+        win.setwin.close()
+    if win.aboutwin:
+        win.aboutwin.close()
+    if win.logwin:
+        win.logwin.close()
+
+
 if __name__ == '__main__':
     try:
         if getattr(sys, 'frozen', False):
@@ -786,8 +858,4 @@ if __name__ == '__main__':
         win.show()
         sys.exit(app.exec())
     except:
-        if "SystemExit" not in str(sys.exc_info()[0]):
-            appc = QApplication(sys.argv)
-            crash = CrashWindow(GUUPATH, traceback.format_exc())
-            crash.show()
-            sys.exit(appc.exec())
+        crash_report()

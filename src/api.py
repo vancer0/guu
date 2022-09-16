@@ -106,19 +106,8 @@ class GayTorrent:
         return categories
 
     # Uploads a torrent
-    def upload(self, path, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title, tor_desc):
+    def upload(self, tor_path, piclist, mc, sc1, sc2, sc3, sc4, tor_title, tor_desc):
         url = "https://www.gaytor.rent/doupload.php"
-
-        # Try to create the cache folder
-        try:
-            os.mkdir(self.temp_path)
-        except Exception:
-            shutil.rmtree(self.temp_path)
-            os.mkdir(self.temp_path)
-
-        # Create torrent
-        dest = os.path.join(self.temp_path, "upl.torrent")
-        Misc.create_torrent(path, dirpath, dest)
 
         # Upload pictures
         piccount = len(piclist)
@@ -162,7 +151,7 @@ class GayTorrent:
                        'infourl': '',
                        'descr': tor_desc,
                        'checktorrent': 'Do it!'}
-        tor_file = {'file': open(os.path.join(self.temp_path, "upl.torrent"), 'rb')}
+        tor_file = {'file': open(tor_path, 'rb')}
 
         # Add picture IDs to upload data
         for pid in pidlist:

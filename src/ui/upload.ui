@@ -10,6 +10,18 @@
     <height>126</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>126</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>400</width>
+    <height>126</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>GUU - Upload</string>
   </property>
@@ -35,7 +47,7 @@
    <item alignment="Qt::AlignHCenter">
     <widget class="QLabel" name="status">
      <property name="text">
-      <string>placeholder text</string>
+      <string>Waiting...</string>
      </property>
     </widget>
    </item>
