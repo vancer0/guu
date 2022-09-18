@@ -16,6 +16,7 @@ from constants import version, themes, torrent_clients
 from api import GayTorrent
 from language import Language
 from qt_classes import GUUClasses
+from crash_report import CrashReport
 
 
 class UploadManager(QObject):
@@ -38,14 +39,14 @@ class UploadManager(QObject):
 
         self.progress.emit("Uploading torrent...")
         tor_url = api.upload(dest,
-                            piclist,
-                            mc,
-                            sc1,
-                            sc2,
-                            sc3,
-                            sc4,
-                            tor_title_var,
-                            tor_desc_var)
+                             piclist,
+                             mc,
+                             sc1,
+                             sc2,
+                             sc3,
+                             sc4,
+                             tor_title_var,
+                             tor_desc_var)
 
         if cfg.saveupld:
             tor_path = api.download(tor_url)
@@ -53,7 +54,7 @@ class UploadManager(QObject):
             try:
                 shutil.copy(tor_path,
                             os.path.join(os.path.dirname(cfg.savepath + '/'),
-                                        tor_title_var + '.torrent'))
+                                         tor_title_var + '.torrent'))
             except shutil.SameFileError:
                 QMessageBox.warning(
                     self, 'GUU', lang.popups.torrent_dl_already_exists)
@@ -78,10 +79,7 @@ class UploadManager(QObject):
                     self.dlpath = win.dlwin.remotePath.text()
                     win.dlwin.close()
                     tor_path = api.download(tor_url)
-                    try:
-                        client.add_torrent(tor_path, self.dlpath)
-                    except:
-                        crash_report()
+                    client.add_torrent(tor_path, self.dlpath)
                     shutil.rmtree(api.temp_path)
                     self.finished.emit()
                 win.dlwin.okBtn.clicked.connect(get)
@@ -92,7 +90,7 @@ class UploadManager(QObject):
 
 
 class Main(QMainWindow):
-    def __init__(self):
+    def __init__(self, parent=None):
         global GUUPATH
         super(Main, self).__init__()
 
@@ -118,7 +116,7 @@ class Main(QMainWindow):
         loadUi(os.path.join(GUUPATH, "ui", "upload.ui"), self.uplwin)
 
         self.crashwin = QWidget()
-        loadUi(os.path.join(GUUPATH, "ui", "crash.ui"), self.crashwin)
+        loadUi(os.path.join(GUUPATH, "ui", "crash-widget.ui"), self.crashwin)
 
         self.set_lang()
 
@@ -156,7 +154,18 @@ class Main(QMainWindow):
         self.update_check()
 
     def closeEvent(self, event):
-        close_all_windows()
+        self.close_all()
+
+    def close_all(self):
+        self.close()
+        if self.uplwin:
+            self.uplwin.close()
+        if self.setwin:
+            self.setwin.close()
+        if self.aboutwin:
+            self.aboutwin.close()
+        if self.logwin:
+            self.logwin.close()
 
     #################
     # GUI FUNCTIONS #
@@ -626,22 +635,30 @@ class Main(QMainWindow):
         if choice == QMessageBox.StandardButton.Yes:
             if cfg.autodl:
                 if client.status == 0:
-                    QMessageBox.warning(self, 'GUU', lang.popups.client_not_running)
+                    QMessageBox.warning(self,
+                                        'GUU',
+                                        lang.popups.client_not_running)
                     self.uploadStatus.setMaximum(1)
                 elif client.status == 2:
-                    QMessageBox.warning(self, 'GUU', lang.popups.client_wrong_credentials)
+                    QMessageBox.warning(self,
+                                        'GUU',
+                                        lang.popups.client_wrong_credentials)
                     self.uploadStatus.setMaximum(1)
                 else:
                     if api.login_status == 1:
                         self.upload()
                     else:
-                        QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
+                        QMessageBox.warning(self,
+                                            'GUU',
+                                            lang.popups.upload_login_error)
                         self.uploadStatus.setMaximum(1)
             else:
                 if api.login_status == 1:
                     self.uploadmanager()
                 else:
-                    QMessageBox.warning(self, 'GUU', lang.popups.upload_login_error)
+                    QMessageBox.warning(self,
+                                        'GUU',
+                                        lang.popups.upload_login_error)
                     self.uploadStatus.setMaximum(1)
 
     # Calls the upload functions on a separate thread
@@ -695,7 +712,8 @@ class Main(QMainWindow):
     # LOGIN FUNCTIONS #
     ###################
 
-    # Opens login window if user is not logged in, logs out if user is logged in.
+    # Opens login window if user is not logged in,
+    # logs out if user is logged in.
     def login(self):
         if api.login_status == 0:
             self.logwin.show()
@@ -739,7 +757,9 @@ class Main(QMainWindow):
 
     # Clears input widgets and loads the selected project file
     def openproj(self):
-        filename = QFileDialog.getOpenFileName(self, lang.file_dialogs.open_project, '',
+        filename = QFileDialog.getOpenFileName(self,
+                                               lang.file_dialogs.open_project,
+                                               '',
                                                "GUU Files (*.guu)")
         if filename == ('', ''):
             return
@@ -783,7 +803,8 @@ class Main(QMainWindow):
             piclist.insert(piccount, value)
             piccount = piccount - 1
 
-        saveas = QFileDialog.getSaveFileName(self, lang.file_dialogs.save_file, 'Untitled.guu',
+        saveas = QFileDialog.getSaveFileName(self, lang.file_dialogs.save_file,
+                                             'Untitled.guu',
                                              "GUU Files (*.guu)")
 
         if saveas is None:
@@ -810,27 +831,26 @@ class Main(QMainWindow):
             print("GUU: Saved project OK.")
 
 
-def crash_report():
+def show_crash_widget(tb):
     if "SystemExit" not in str(sys.exc_info()[0]):
-        close_all_windows()
+        win.close_all()
         win.crashwin.show()
-        win.crashwin.output.insertPlainText(traceback.format_exc())
+        print("GUU: GUU: Showing crash report 2")
+        win.crashwin.output.insertPlainText(tb)
 
 
-def close_all_windows():
-    win.close()
-    if win.uplwin:
-        win.uplwin.close()
-    if win.setwin:
-        win.setwin.close()
-    if win.aboutwin:
-        win.aboutwin.close()
-    if win.logwin:
-        win.logwin.close()
+def exception_hook(exctype, value, tb):
+    sys._excepthook(exctype, value, tb)
+    tblist = traceback.format_exception(exctype, value, tb)
+    tb = ""
+    for t in tblist:
+        tb += t
+    tb += "\n"
+    show_crash_widget(tb)
 
 
-try:
-    if __name__ == '__main__':
+if __name__ == '__main__':
+    try:
         if getattr(sys, 'frozen', False):
             GUUPATH = sys._MEIPASS
         else:
@@ -847,15 +867,24 @@ try:
             lang = Language(cfg.language,
                             os.path.join(cfg.data_path, "languages"))
         client = Misc.select_client(cfg)
-        app = QApplication(sys.argv)
-        if cfg.theme == "system":
-            app.setStyleSheet("")
-        elif cfg.theme == "dark":
-            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-        elif cfg.theme == "light":
-            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
-        win = Main()
-        win.show()
-        sys.exit(app.exec())
-except:
-    crash_report()
+    except:
+        appc = QApplication(sys.argv)
+        crs = CrashReport(GUUPATH, traceback.format_exc())
+        crs.show()
+        sys.exit(appc.exec())
+    else:
+        try:
+            app = QApplication(sys.argv)
+            if cfg.theme == "system":
+                app.setStyleSheet("")
+            elif cfg.theme == "dark":
+                app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+            elif cfg.theme == "light":
+                app.setStyleSheet(qdarktheme.load_stylesheet("light"))
+            win = Main()
+            win.show()
+            sys._excepthook = sys.excepthook
+            sys.excepthook = exception_hook
+            sys.exit(app.exec())
+        except:
+            show_crash_widget(traceback.format_exc)
