@@ -1,7 +1,7 @@
 from PyQt6.uic import loadUi
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QWidget, QApplication, QGroupBox, QLabel, QComboBox, QSplitter, QPushButton, QLineEdit, QPlainTextEdit, QProgressBar, QMenuBar, QMenu
-from PyQt6.QtCore import QSize, QObject, pyqtSignal, QThread
+from PyQt6.QtCore import QSize, QObject, pyqtSignal, QThread, pyqtSlot
 import sys
 import shutil
 import os
@@ -24,8 +24,9 @@ class UploadManager(QObject):
     progress = pyqtSignal(str)
 
     # Controls the several upload functions according to the user settings
-    def run(self, path, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title_var, tor_desc_var):
-        global GUUPATH
+    @pyqtSlot()
+    def run(self, path, dirpath, piclist, mc, sc1, sc2,
+            sc3, sc4, tor_title_var, tor_desc_var):
         # Try to create the cache folder
         try:
             os.mkdir(api.temp_path)
@@ -34,10 +35,12 @@ class UploadManager(QObject):
             os.mkdir(api.temp_path)
 
         self.progress.emit("Creating torrent...")
+        print("GUU: Creating torrent")
         dest = os.path.join(api.temp_path, "upl.torrent")
         Misc.create_torrent(path, dirpath, dest)
 
         self.progress.emit("Uploading torrent...")
+        print("GUU: Sending torrent to API for upload")
         tor_url = api.upload(dest,
                              piclist,
                              mc,
@@ -102,19 +105,14 @@ class Main(QMainWindow):
         print("GUU: Loading widgets")
         self.logwin = QWidget()
         loadUi(os.path.join(GUUPATH, "ui", "login.ui"), self.logwin)
-
         self.dlwin = QWidget()
         loadUi(os.path.join(GUUPATH, "ui", "dlselect.ui"), self.dlwin)
-
         self.aboutwin = QWidget()
         loadUi(GUUPATH + '/ui/about.ui', self.aboutwin)
-
         self.setwin = QWidget()
         loadUi(GUUPATH + '/ui/settings.ui', self.setwin)
-
         self.uplwin = QWidget()
         loadUi(os.path.join(GUUPATH, "ui", "upload.ui"), self.uplwin)
-
         self.crashwin = QWidget()
         loadUi(os.path.join(GUUPATH, "ui", "crash-widget.ui"), self.crashwin)
 
@@ -685,19 +683,19 @@ class Main(QMainWindow):
 
         self.uplwin.show()
 
-        self.thread = QThread()
-        self.worker = UploadManager()
-        self.worker.moveToThread(self.thread)
+        thread = QThread(parent=self)
+        worker = UploadManager()
+        worker.moveToThread(thread)
 
-        self.thread.started.connect(lambda: self.worker.run(path_var, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title_var, tor_desc_var))
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.finished.connect(lambda: self.uploadStatus.setMaximum(1))
-        self.thread.finished.connect(lambda: self.uplwin.close())
-        self.worker.progress.connect(self.upload_report_progress)
-        self.thread.finished.connect(lambda: QMessageBox.information(self, 'GUU', lang.popups.upload_complete))
-        self.thread.start()
+        thread.started.connect(lambda: worker.run(path_var, dirpath, piclist, mc, sc1, sc2, sc3, sc4, tor_title_var, tor_desc_var))
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(lambda: self.uploadStatus.setMaximum(1))
+        thread.finished.connect(self.uplwin.close)
+        worker.progress.connect(self.upload_report_progress)
+        thread.finished.connect(lambda: QMessageBox.information(self, 'GUU', lang.popups.upload_complete))
+        thread.start()
 
     def upload_report_progress(self, text):
         self.uplwin.status.setText(text)
