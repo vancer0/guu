@@ -164,15 +164,14 @@ class GayTorrent:
             r = self.session.post(url,
                                   data=upload_data,
                                   files=tor_file,
-                                  timeout=3)
+                                  timeout=60)
         except(Timeout, ConnectionError):
             print("API: Failed to connect to server")
-            return
+            return ""
         else:
             print("API: Uploaded data OK.")
-
-        # Return the uploaded torrent's URL
-        return r.url
+            # Return the uploaded torrent's URL
+            return r.url
 
     # Downloads a torrent from a given URL and returns the file path
     def download(self, tor_url):
@@ -182,13 +181,13 @@ class GayTorrent:
         # Download the torrent and save it as dl.torrent
         dest = os.path.join(self.temp_path, "dl.torrent")
         try:
-            with self.session.get(urle, timeout=3) as r:
+            with self.session.get(urle, timeout=60) as r:
                 with open(dest, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=16*1024):
                         f.write(chunk)
         except(Timeout, ConnectionError):
             print("API: Failed to connect to server")
-            return
+            return ""
         else:
             print("API: Downloaded torrent OK.")
             return dest
