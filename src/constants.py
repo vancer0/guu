@@ -1,5 +1,5 @@
 # Version
-version = '5'
+version = '6'
 
 # Languages
 languages = ["en"]
