@@ -869,7 +869,7 @@ if __name__ == '__main__':
         appc = QApplication(sys.argv)
         crs = CrashReport(GUUPATH, traceback.format_exc())
         crs.show()
-        sys.exit(appc.exec())
+        appc.exec()
     else:
         try:
             app = QApplication(sys.argv)
@@ -883,6 +883,6 @@ if __name__ == '__main__':
             win.show()
             sys._excepthook = sys.excepthook
             sys.excepthook = exception_hook
-            sys.exit(app.exec())
+            app.exec()
         except:
             show_crash_widget(traceback.format_exc)
