@@ -118,7 +118,7 @@ class GayTorrent:
         try:
             for pic in piclist:
                 pics = {'ulpic[]': open(pic, 'rb')}
-                self.session.post(url, files=pics, timeout=3)
+                self.session.post(url, files=pics, timeout=60)
         except(Timeout, ConnectionError):
             self.log.new(2, 2, "Failed to connect to server")
             return
