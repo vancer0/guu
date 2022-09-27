@@ -17,6 +17,8 @@ from api import GayTorrent
 from language import Language
 from qt_classes import GUUClasses
 from crash_report import CrashReport
+from logger import GUULogging
+from misc import Misc
 
 
 class UploadManager(QObject):
@@ -35,12 +37,12 @@ class UploadManager(QObject):
             os.mkdir(api.temp_path)
 
         self.progress.emit("Creating torrent...")
-        print("GUU: Creating torrent")
+        log.new(1, 1, "Creating torrent")
         dest = os.path.join(api.temp_path, "upl.torrent")
-        Misc.create_torrent(path, dirpath, dest)
+        misc.create_torrent(path, dirpath, dest)
 
         self.progress.emit("Uploading torrent...")
-        print("GUU: Sending torrent to API for upload")
+        log.new(1, 1, "Sending torrent to API for upload")
         tor_url = api.upload(dest,
                              piclist,
                              mc,
@@ -65,7 +67,7 @@ class UploadManager(QObject):
                 QMessageBox.warning(
                     self, 'GUU', lang.popups.torrent_dl_no_permission)
             else:
-                print("GUU: Torrent saved")
+                log.new(1, 1, "Torrent saved")
 
         if cfg.autodl:
             self.progress.emit("Adding torrent to client...")
@@ -99,10 +101,10 @@ class Main(QMainWindow):
 
         sys.modules['GUUClasses'] = GUUClasses
 
-        print("GUU: Drawing window")
+        log.new(1, 1, "Drawing window")
         loadUi(os.path.join(GUUPATH, "ui", "gui.ui"), self)
 
-        print("GUU: Loading widgets")
+        log.new(1, 1, "Loading widgets")
         self.logwin = QWidget()
         loadUi(os.path.join(GUUPATH, "ui", "login.ui"), self.logwin)
         self.dlwin = QWidget()
@@ -227,11 +229,11 @@ class Main(QMainWindow):
                 api.check_login_status()
 
                 if api.login_status == 1:
-                    print("GUU: Auto login OK")
+                    log.new(1, 1, "Auto login OK")
                     self.checklogin()
                     self.categ_reload()
                 else:
-                    print("GUU: Auto login failed")
+                    log.new(2, 1, "Auto login failed")
                     self.checklogin()
             else:
                 self.checklogin()
@@ -258,12 +260,12 @@ class Main(QMainWindow):
 
     # Check for updates
     def update_check(self):
-        v = Misc.update_link()
+        v = misc.update_link()
         if v[0] == 1:
             choice = QMessageBox.question(self, 'GUU', lang.popups.new_version,
                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if choice == QMessageBox.StandardButton.Yes:
-                Misc.openlink(v[1])
+                misc.openlink(v[1])
             else:
                 return
         else:
@@ -352,7 +354,7 @@ class Main(QMainWindow):
         categ_path = os.path.join(cfg.data_path, "categories.cache")
 
         if os.path.exists(categ_path):
-            print("GUU: Category cache exists")
+            log.new(1, 1, "Category cache exists")
             self.categories = [lang.ui.select_category]
             self.subcategories = [lang.ui.optional]
             self.categories_num = [0]
@@ -362,7 +364,7 @@ class Main(QMainWindow):
                 except JSONDecodeError:
                     f.close()
                     os.remove(categ_path)
-                    print("GUU: Category cache does not exist")
+                    log.new(2, 1, "Category cache does not exist")
                     self.categories = [lang.ui.categories_login_error]
                     self.subcategories = [lang.ui.categories_login_error]
                     self.categories_num = [0]
@@ -372,9 +374,9 @@ class Main(QMainWindow):
                         self.categories.append(key)
                         self.subcategories.append(key)
                         self.categories_num.append(c[key])
-            print("GUU: Loaded categories from cache")
+            log.new(1, 1, "Loaded categories from cache")
         else:
-            print("GUU: Category cache does not exist")
+            log.new(2, 1, "Category cache does not exist")
             self.categories = [lang.ui.categories_login_error]
             self.subcategories = [lang.ui.categories_login_error]
             self.categories_num = [0]
@@ -405,13 +407,13 @@ class Main(QMainWindow):
             self.subcategory3.addItems(self.subcategories)
             self.subcategory4.addItems(self.subcategories)
 
-            print("GUU: Loaded categories from server")
+            log.new(1, 1, "Loaded categories from server")
 
             categ_path = os.path.join(cfg.data_path, "categories.cache")
             with open(categ_path, 'w') as f:
                 json.dump(c, f)
                 f.close()
-            print("GUU: Categories saved to cache")
+            log.new(1, 1, "Categories saved to cache")
         else:
             QMessageBox.warning(
                 self,
@@ -431,7 +433,7 @@ class Main(QMainWindow):
                 'GUU',
                 lang.popups.client_wrong_credentials)
         else:
-            Misc.openlink("http://" + cfg.webuihost +
+            misc.openlink("http://" + cfg.webuihost +
                           ':' + cfg.webuiport)
 
     #########################
@@ -445,18 +447,18 @@ class Main(QMainWindow):
         self.set_about_lang()
         self.aboutwin.label.setText(
             "<html><head/><body><p><span style=\" font-size:18pt;\">{} v{}</span></p></body></html>".format(lang.about.guu, version))
-        self.aboutwin.label_4.linkActivated.connect(lambda: Misc.openlink(
+        self.aboutwin.label_4.linkActivated.connect(lambda: misc.openlink(
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html"))
         self.aboutwin.label_8.linkActivated.connect(
-            lambda: Misc.openlink("https://github.com/psf/requests"))
+            lambda: misc.openlink("https://github.com/psf/requests"))
         self.aboutwin.label_9.linkActivated.connect(
-            lambda: Misc.openlink("https://www.crummy.com/software/BeautifulSoup"))
+            lambda: misc.openlink("https://www.crummy.com/software/BeautifulSoup"))
         self.aboutwin.label_10.linkActivated.connect(
-            lambda: Misc.openlink("https://github.com/arvidn/libtorrent"))
+            lambda: misc.openlink("https://github.com/arvidn/libtorrent"))
         self.aboutwin.label_11.linkActivated.connect(
-            lambda: Misc.openlink("https://github.com/rmartin16/qbittorrent-api"))
+            lambda: misc.openlink("https://github.com/rmartin16/qbittorrent-api"))
         self.aboutwin.label_5.linkActivated.connect(
-            lambda: Misc.openlink("https://github.com/5yutan5/PyQtDarkTheme"))
+            lambda: misc.openlink("https://github.com/5yutan5/PyQtDarkTheme"))
 
     # Changes all text to this from the language file
     def set_about_lang(self):
@@ -595,13 +597,13 @@ class Main(QMainWindow):
 
         cfg.load_config()
         if cfg.autodl:
-            client = Misc.select_client(cfg)
+            client = misc.select_client(cfg)
         else:
             client.logout()
         self.set_lang()
         self.load_categs()
         self.checks()
-        languages, languages_full = Misc.fetch_lang_packs(
+        languages, languages_full = misc.fetch_lang_packs(
             os.path.join(cfg.data_path, "languages"))
         if languages == []:
             from constants import languages, languages_full
@@ -678,8 +680,9 @@ class Main(QMainWindow):
         piccount = self.picTable.count()
         for line in range(piccount):
             value = self.picTable.item(line).text()
-            piclist.insert(piccount, value)
-            piccount = piccount - 1
+            piclist.append(value)
+            # piclist.insert(piccount, value)
+            # piccount = piccount - 1
 
         self.uplwin.show()
 
@@ -780,7 +783,7 @@ class Main(QMainWindow):
         self.description.insertPlainText(data["Info"]["Description"])
         self.picTable.clear()
         self.picTable.add_pictures(data["Pictures"]["Path(s)"])
-        print("GUU: Loaded project OK.")
+        log.new(1, 1, "Loaded project OK.")
 
     # Saves all input values to a project file
     def saveproj(self):
@@ -826,21 +829,21 @@ class Main(QMainWindow):
 
             with open(filename, 'w') as f:
                 json.dump(data, f)
-            print("GUU: Saved project OK.")
+            log.new(1, 1, "Saved project OK.")
 
 
 def show_crash_widget(tb):
     if "SystemExit" not in str(sys.exc_info()[0]):
         win.close_all()
         win.crashwin.show()
-        print("GUU: GUU: Showing crash report 2")
+        log.new(1, 1, "Showing crash report 2")
         win.crashwin.output.insertPlainText(tb)
 
 
 def exception_hook(exctype, value, tb):
     sys._excepthook(exctype, value, tb)
     tblist = traceback.format_exception(exctype, value, tb)
-    tb = ""
+    tb = log.get() + "\n"
     for t in tblist:
         tb += t
     tb += "\n"
@@ -853,9 +856,11 @@ if __name__ == '__main__':
             GUUPATH = sys._MEIPASS
         else:
             GUUPATH = os.path.dirname(os.path.abspath(__file__))
-        cfg = Settings()
-        api = GayTorrent()
-        languages, languages_full = Misc.fetch_lang_packs(
+        log = GUULogging()
+        cfg = Settings(log)
+        api = GayTorrent(log)
+        misc = Misc(log)
+        languages, languages_full = misc.fetch_lang_packs(
             os.path.join(cfg.data_path, "languages"))
         if languages == []:
             from constants import languages, languages_full
@@ -864,9 +869,10 @@ if __name__ == '__main__':
         else:
             lang = Language(cfg.language,
                             os.path.join(cfg.data_path, "languages"))
-        client = Misc.select_client(cfg)
+        client = misc.select_client(cfg)
     except:
         appc = QApplication(sys.argv)
+        log.new(1, 1, "Showing crash report 1")
         crs = CrashReport(GUUPATH, traceback.format_exc())
         crs.show()
         appc.exec()
@@ -885,4 +891,5 @@ if __name__ == '__main__':
             sys.excepthook = exception_hook
             app.exec()
         except:
-            show_crash_widget(traceback.format_exc)
+            text = log.get() + "\n" + traceback.format_exc
+            show_crash_widget(text)

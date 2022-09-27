@@ -11,13 +11,16 @@ from clients import QBitTorrent
 
 
 class Misc:
+    def __init__(self, log):
+        self.log = log
+
     # Open link in web browser
-    def openlink(url):
-        print("GUU: Opening {}".format(str(url)))
+    def openlink(self, url: str):
+        self.log.new(1, 1, "Opening {}".format(str(url)))
         open_new_tab(url)
 
     # Create torrent
-    def create_torrent(path, dirp, dest):
+    def create_torrent(self, path: str, dirp: str, dest: str):
         fs = lt.file_storage()
         lt.add_files(fs, path)
         t = lt.create_torrent(fs)
@@ -29,10 +32,10 @@ class Misc:
             f.write(lt.bencode(torrent))
             f.close()
 
-        print("GUU: Created torrent OK.")
+        self.log.new(1, 1, "Created torrent OK.")
 
     # Checks for updates and returns DL link
-    def update_link():
+    def update_link(self):
         try:
             remote = requests.get("https://vancer0.github.io/guu/version.json",
                                   stream=True, timeout=3)
@@ -42,10 +45,10 @@ class Misc:
             ver = 0
 
         if ver == 0:
-            print("GUU: Cannot reach GitHub. Update check failed.")
+            self.log.new(2, 1, "Cannot reach GitHub. Update check failed.")
             return [0, ""]
         elif ver > int(version):
-            print("GUU: New version available: {}".format(str(ver)))
+            self.log.new(1, 1, "New version available: {}".format(str(ver)))
             if sys.platform.startswith('linux'):
                 return [1, "https://github.com/vancer0/guu/releases/latest/download/GUU-Linux-x86_64.AppImage"]
             elif sys.platform.startswith('win'):
@@ -55,26 +58,26 @@ class Misc:
             else:
                 return [1, "https://github.com/vancer0/guu/releases/tag/{}".format(str(ver))]
         elif ver == int(version):
-            print("GUU: No updates found.")
+            self.log.new(1, 1, "No updates found.")
             return [0, ""]
         else:
-            print("GUU: Unknown error while checking updates.")
+            self.log.new(2, 1, "Unknown error while checking updates.")
             return [0, ""]
 
     # Sets the torrent client
-    def select_client(cfg):
+    def select_client(self, cfg):
         # if cfg.client == "qBitTorrent":
-        return QBitTorrent(cfg)
+        return QBitTorrent(self.log, cfg)
 
     # Downloads all available language packs to cache
-    def fetch_lang_packs(folder):
+    def fetch_lang_packs(self, folder: str):
         try:
             remote = requests.get("https://vancer0.github.io/guu/languages.json",
                                   stream=True,
                                   timeout=3)
         except (Timeout, ConnectionError):
-            print("GUU: Failed to download language packs")
-            return Misc.use_offline_lang_packs(folder)
+            self.log.new(2, 1, "Failed to download language packs")
+            return self.use_offline_lang_packs(folder)
         else:
             data = json.loads(remote.text)
 
@@ -95,7 +98,7 @@ class Misc:
                                       stream=True,
                                       timeout=3)
             except (Timeout, ConnectionError):
-                print("GUU: Failed to download language: {}".format(language))
+                self.log.new(2, 1, "Failed to download language: {}".format(language))
                 break
             else:
                 lang_data = remote.text
@@ -106,11 +109,11 @@ class Misc:
             with open(path, "w") as f:
                 f.write(lang_data)
                 f.close()
-            print("GUU: Downloaded language: {}".format(language))
+            self.log.new(1, 1, "Downloaded language: {}".format(language))
 
-        return Misc.use_offline_lang_packs(folder)
+        return self.use_offline_lang_packs(folder)
 
-    def use_offline_lang_packs(folder):
+    def use_offline_lang_packs(self, folder: str):
         if not os.path.exists(folder):
             return [], []
         else:

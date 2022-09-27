@@ -4,15 +4,17 @@ from requests.exceptions import Timeout, ConnectionError
 
 
 class QBitTorrent:
-    def __init__(self, cfg):
+    def __init__(self, log, cfg):
+        self.log = log
+
         try:
             requests.head("http://" + cfg.webuihost +
                           ":" + cfg.webuiport, timeout=3)
         except(Timeout, ConnectionError):
-            print("CLT: QBitTorrent WebUI unreachable.")
+            self.log.new(2, 3, "QBitTorrent WebUI unreachable.")
             self.status = 0
         else:
-            print("CLT: QBitTorrent WebUI found.")
+            self.log.new(1, 3, "QBitTorrent WebUI found.")
             if cfg.autodl:
                 try:
                     self.client = QBitClient(
@@ -22,15 +24,15 @@ class QBitTorrent:
                         password=cfg.webuipwd)
                     self.client.auth_log_in()
                 except:
-                    print("CLT: Wrong QBitTorrent WebUI credentials.")
+                    self.log.new(2, 3, "Wrong QBitTorrent WebUI credentials.")
                     self.status = 2
                 else:
-                    print("CLT: Connection with QBitTorrent OK.")
+                    self.log.new(1, 3, "Connection with QBitTorrent OK.")
                     self.status = 1
             else:
                 self.status = 0
 
-    def add_torrent(self, path, dlpath):
+    def add_torrent(self, path: str, dlpath: str):
         self.client.torrents_add(
             torrent_files=path, savepath=dlpath, is_paused=False)
-        print("CLT: Added torrent to client OK.")
+        self.log.new(1, 3, "Added torrent to client OK.")

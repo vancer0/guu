@@ -6,7 +6,9 @@ from constants import config_defaults
 
 
 class Settings:
-    def __init__(self):
+    def __init__(self, log):
+        self.log = log
+
         self.get_data_path()
 
         self.config_path = os.path.join(self.data_path, "config")
@@ -57,7 +59,7 @@ class Settings:
         self.saveupld = bool(int(self.config['UPLOADING']['Save_Uploads']))
         self.savepath = self.config['UPLOADING']['Save_Path']
 
-        print("GUU: Loaded config.")
+        self.log.new(1, 1, "Loaded config.")
 
     # Generates the config
     def generate(self):
@@ -74,8 +76,10 @@ class Settings:
             self.config.write(config_file)
 
     # Saves given values to the config
-    def save(self, language, theme, savelgn, gtusr, gtpwd, autodl, client,
-             webuiport, webuihost, webuiusr, webuipwd, saveupld, savepath):
+    def save(self, language: str, theme: str, savelgn: str, gtusr: str,
+             gtpwd: str, autodl: str, client: str, webuiport: str,
+             webuihost: str, webuiusr: str, webuipwd: str,
+             saveupld: str, savepath: str):
         self.generate()
 
         self.config.set("GENERAL", "Language", language)
@@ -98,10 +102,10 @@ class Settings:
         with open(self.config_path, 'w') as config_file:
             self.config.write(config_file)
 
-        print("GUU: Config saved.")
+        self.log.new(1, 1, "Config saved.")
 
     # Saves only the login credentials
-    def login_save(self, savelgn, usr, pwd):
+    def login_save(self, savelgn: str, usr: str, pwd: str):
         self.generate()
 
         self.config.set("GAYTORRENT", "SaveLogin", savelgn)
@@ -110,7 +114,7 @@ class Settings:
 
         with open(self.config_path, 'w') as config_file:
             self.config.write(config_file)
-        print("GUU: Config saved.")
+        self.log.new(1, 1, "Config saved.")
 
     # Converts the config from previous formats to work on the latest version
     def compatibility(self):
@@ -118,5 +122,5 @@ class Settings:
             self.config.set("CLIENT", "client", "qBitTorrent")
             with open(self.config_path, 'w') as config_file:
                 self.config.write(config_file)
-            print("GUU: Config converted")
+            self.log.new(1, 1, "Config converted")
             self.load_config()

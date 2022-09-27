@@ -8,12 +8,14 @@ import jwt
 
 
 class GayTorrent:
-    def __init__(self):
+    def __init__(self, log):
         self.session = requests.Session()
         self.login_status = 0
         self.server_status = 0
         self.username = ""
         self.get_temp_path()
+
+        self.log = log
 
     def get_temp_path(self):
         # Find temp folder
@@ -44,7 +46,7 @@ class GayTorrent:
         try:
             r = self.session.head('https://www.gaytor.rent', timeout=3)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
             self.server_status = 0
         else:
             if r.status_code == 200:
@@ -54,13 +56,13 @@ class GayTorrent:
 
     # Sends the provided username and password to the
     # server for authentication.
-    def login(self, username, password):
+    def login(self, username: str, password: str):
         login_data = {'username': username, 'password': password}
         try:
             self.session.post("https://www.gaytor.rent/takelogin.php",
                               params=login_data, timeout=3)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
         self.get_username()
 
     # Checks whether the user is logged in or not and changes
@@ -69,11 +71,11 @@ class GayTorrent:
         try:
             r = self.session.head("https://www.gaytor.rent/qtm.php", timeout=3)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
             self.login_status = 0
         else:
             if r.status_code == 200:
-                print("API: Logged in OK.")
+                self.log.new(1, 2, "Logged in OK.")
                 self.login_status = 1
             else:
                 self.login_status = 0
@@ -83,20 +85,20 @@ class GayTorrent:
         try:
             self.session.get("https://www.gaytor.rent/logout.php", timeout=3)
         except(Timeout, ConnectionError):
-            print("Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
         else:
             self.login_status = 0
 
     # Fetches the categories from the server and returns
     # a dictionary with the names and IDs
     def fetch_categories(self):
-        print("API: Fetching category list")
+        self.log.new(1, 2, "Fetching category list")
         try:
             r = self.session.get(
                 "https://www.gaytor.rent/genrelist.php",
                 timeout=3)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
             return
         categories = {}
         raw = str(r.text)[46:].split('\n')
@@ -107,7 +109,8 @@ class GayTorrent:
         return categories
 
     # Uploads a torrent
-    def upload(self, tor_path, piclist, mc, sc1, sc2, sc3, sc4, tor_title, tor_desc):
+    def upload(self, tor_path: str, piclist: [str], mc: str, sc1: str,
+               sc2: str, sc3: str, sc4: str, tor_title: str, tor_desc: str):
         url = "https://www.gaytor.rent/doupload.php"
 
         # Upload pictures
@@ -117,19 +120,19 @@ class GayTorrent:
                 pics = {'ulpic[]': open(pic, 'rb')}
                 self.session.post(url, files=pics, timeout=3)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
+            self.log.new(2, 2, "Failed to connect to server")
             return
         else:
-            print("API: Uploaded pictures OK.")
+            self.log.new(1, 2, "Uploaded pictures OK.")
 
         # Get picture IDs
         pidlist = []
 
         def getdata(url):
             try:
-                r = self.session.get(url, timeout=3)
+                r = self.session.get(url, timeout=60)
             except(Timeout, ConnectionError):
-                print("API: Failed to connect to server")
+                self.log.new(2, 2, "Failed to connect to server")
             return r.text
         htmldata = getdata(url)
         soup = BeautifulSoup(htmldata, 'html.parser')
@@ -138,7 +141,7 @@ class GayTorrent:
             if tmp.startswith('/tpics'):
                 pid = tmp[15:tmp.rfind(".")]
                 pidlist.insert(piccount, pid)
-        print("API: Gathered picture IDs OK.")
+        self.log.new(1, 2, "Gathered picture IDs OK.")
 
         # Gather upload data
         upload_data = {'MAX_FILE_SIZE': 40000000,
@@ -166,15 +169,15 @@ class GayTorrent:
                                   files=tor_file,
                                   timeout=60)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
-            return ""
+            self.log.new(2, 2, "Failed to connect to server")
+            return
         else:
-            print("API: Uploaded data OK.")
+            self.log.new(1, 2, "Uploaded data OK.")
             # Return the uploaded torrent's URL
             return r.url
 
     # Downloads a torrent from a given URL and returns the file path
-    def download(self, tor_url):
+    def download(self, tor_url: str):
         tor_id = tor_url[39:87]  # Get torrent ID
         urle = "https://www.gaytor.rent/download.php/" + tor_id + "/dl.torrent"
 
@@ -186,14 +189,15 @@ class GayTorrent:
                     for chunk in r.iter_content(chunk_size=16*1024):
                         f.write(chunk)
         except(Timeout, ConnectionError):
-            print("API: Failed to connect to server")
-            return ""
+            self.log.new(2, 2, "Failed to connect to server")
+            return
         else:
-            print("API: Downloaded torrent OK.")
+            self.log.new(1, 2, "Downloaded torrent OK.")
             return dest
 
     # Gets the username
     def get_username(self):
         token = self.session.cookies.get_dict()["token"]
-        token_dec = jwt.decode(token, "secret", algorithms=["HS256"], options={'verify_signature': False})
+        token_dec = jwt.decode(token, "secret", algorithms=["HS256"],
+                               options={'verify_signature': False})
         self.username = token_dec["username"]
