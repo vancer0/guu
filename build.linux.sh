@@ -21,10 +21,10 @@ cp src/icon/guu.png squashfs-root/src/icon/guu.png
 export VERSION=1
 export ARCH=x86_64 appimagetool
 chmod -R 755 squashfs-root
-wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
-chmod +x appimagetool-*.AppImage
-./appimagetool-*-x86_64.AppImage squashfs-root/
-rm appimagetool-*-x86_64.AppImage
+wget "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+chmod +x appimagetool-x86_64.AppImage
+./appimagetool-x86_64.AppImage squashfs-root/
+rm appimagetool-x86_64.AppImage
 rm -r squashfs-root
 
 # Copy executable
