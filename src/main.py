@@ -654,7 +654,7 @@ class Main(QMainWindow):
                         self.uploadStatus.setMaximum(1)
             else:
                 if api.login_status == 1:
-                    self.uploadmanager()
+                    self.upload()
                 else:
                     QMessageBox.warning(self,
                                         'GUU',
