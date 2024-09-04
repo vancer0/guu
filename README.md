@@ -1,3 +1,5 @@
+# Moved to [guu-cpp](https://github.com/vancer0/guu-cpp)
+
 # Gaytor.rent Upload Utility
 
 <img title="GUU" alt="GUU" height=400 src="https://github.com/vancer0/guu/raw/master/media/screenshot.png">
